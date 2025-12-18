@@ -1,0 +1,944 @@
+รับทราบครับ ผมได้ปรับปรุงโค้ดทั้งหมดให้เป็นระบบ "Real-time Action" เรียบร้อยแล้ว
+
+สิ่งที่ปรับปรุง:
+
+การอนุมัติ/ปฏิเสธ (Transactions): ทันทีที่กดยืนยัน ระบบจะรีเฟรชตารางรายการ, อัปเดตยอดเงินใน Dashboard, กราฟ, Live Feed และตัวเลขแจ้งเตือนที่ Sidebar ทันที
+
+การเพิ่ม/แก้ไขข้อมูล (Submit Form): เมื่อกดบันทึก ข้อมูลในตารางจะเปลี่ยนทันที และค่าสถิติต่างๆ ที่เกี่ยวข้องจะอัปเดตใหม่ทั้งหมด
+
+การลบข้อมูล (Delete): เมื่อลบสำเร็จ ทุกส่วนที่เกี่ยวข้องจะรีเฟรชทันที
+
+คุณสามารถนำโค้ดชุดนี้ไปใช้งานแทนของเดิมได้ทันทีครับ (เป็นเวอร์ชันล่าสุดที่รวมการแสดงผล Live Feed ที่ถูกต้อง + ระบบ Real-time แล้ว)
+
+code
+Html
+play_circle
+download
+content_copy
+expand_less
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1" name="viewport" />
+    <title>TH-LOTTO - ADMIN PANEL</title>
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" /> 
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Config -->
+    <script>
+        tailwind.config = { 
+            theme: { 
+                extend: { 
+                    fontFamily: { sans: ['Prompt', 'sans-serif'] }, 
+                    colors: { 
+                        brand: { 
+                            dark: '#144026', 
+                            primary: '#1e5e38', 
+                            light: '#e8f5e9',
+                            bg: '#F5F6FA', 
+                            blue: '#3b82f6'
+                        } 
+                    },
+                    borderRadius: { '3xl': '24px', '4xl': '32px' },
+                    boxShadow: { 'soft': '0 10px 40px -10px rgba(0,0,0,0.05)' }
+                } 
+            } 
+        }
+    </script>
+
+    <style>
+        body { background-color: #F5F6FA; color: #1f2937; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .hover-card { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .hover-card:hover { transform: translateY(-4px); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); }
+
+        .nav-item.active { color: #144026; background-color: transparent; font-weight: 700; position: relative; }
+        .nav-item.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 24px; width: 4px; background: #144026; border-radius: 0 4px 4px 0; }
+        
+        #sidebar-overlay { transition: opacity 0.3s; }
+        #sidebar { transition: transform 0.3s ease-in-out; }
+        .sidebar-open { transform: translateX(0) !important; }
+        
+        .toggle-checkbox:checked { right: 0; border-color: #3b82f6; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #3b82f6; }
+        
+        .btn-option { transition: all 0.2s; border: 1px solid #e5e7eb; background: white; color: #4b5563; font-weight: 500; font-size: 0.8rem; }
+        .btn-option:hover { background: #f9fafb; border-color: #d1d5db; }
+        .btn-option.selected { background: #144026; color: white; border-color: #144026; box-shadow: 0 4px 10px rgba(20, 64, 38, 0.2); }
+        .btn-option[data-value="true"].selected, .btn-option[data-value="active"].selected { background: #10b981; border-color: #10b981; }
+        .btn-option[data-value="false"].selected, .btn-option[data-value="banned"].selected { background: #ef4444; border-color: #ef4444; }
+
+        .search-pill-container { background-color: white; border-radius: 9999px; padding: 0.5rem 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #f3f4f6; display: flex; align-items: center; width: 100%; max-width: 400px; transition: all 0.2s; }
+        .search-pill-container:focus-within { box-shadow: 0 4px 12px rgba(26, 126, 42, 0.08); border-color: #144026; }
+        .search-pill-icon { color: #9ca3af; font-size: 1rem; margin-right: 0.75rem; }
+        .search-pill-input { border: none; outline: none; width: 100%; font-size: 0.9rem; color: #4b5563; background: transparent; font-weight: 400; }
+        
+        /* Card View */
+        .card-item { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid #f3f4f6; transition: transform 0.2s; display: flex; flex-direction: column; }
+        .card-item:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.06); }
+        .card-img-wrapper { width: 100%; padding-top: 56.25%; position: relative; background: #f3f4f6; border-bottom: 1px solid #f0f0f0; }
+        .card-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        .card-body { padding: 1rem; flex: 1; display: flex; flex-direction: column; }
+        .card-title { font-weight: 600; font-size: 1rem; color: #1f2937; margin-bottom: 0.5rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .card-footer { margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid #f3f4f6; }
+        
+        .modal-cover-container { width: 100%; height: 280px; overflow: hidden; display: none; position: relative; background-color: #f9fafb; border-bottom: 1px solid #f3f4f6; }
+        .modal-cover-container.has-img { display: block; }
+        .modal-cover-img { width: 100%; height: 100%; object-fit: contain; backdrop-filter: blur(0px); padding: 10px; }
+        .modal-cover-bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: blur(30px); opacity: 0.3; }
+
+        /* List Row Style (for Transactions) */
+        .list-row-container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            border: 1px solid #f3f4f6;
+            overflow: hidden;
+        }
+        .list-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            transition: all 0.15s;
+            flex-wrap: nowrap;
+            gap: 1rem;
+            overflow-x: auto;
+        }
+        .list-row:last-child { border-bottom: none; }
+        .list-row:hover { background-color: #f9fafb; }
+        .list-col { white-space: nowrap; }
+
+        /* Full Table Styles */
+        .data-table th { font-size: 0.75rem; font-weight: 600; color: #6b7280; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; white-space: nowrap; letter-spacing: 0.02em; padding: 1rem; }
+        .data-table td { padding: 1rem; vertical-align: middle; border-bottom: 1px solid #f3f4f6; font-size: 0.8rem; color: #374151; }
+        .data-table tr:hover { background-color: #f9fafb; }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden selection:bg-green-100 selection:text-green-900">
+
+    <!-- Global Loader -->
+    <div id="global-loader" class="fixed inset-0 z-[100] bg-white/80 hidden flex flex-col items-center justify-center backdrop-blur-md">
+        <div class="relative">
+            <div class="w-16 h-16 border-4 border-green-200 border-t-green-800 rounded-full animate-spin"></div>
+            <div class="absolute inset-0 flex items-center justify-center font-bold text-xs text-green-800">LOAD</div>
+        </div>
+    </div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 z-40 bg-black/50 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-[260px] bg-white flex flex-col h-full border-r border-gray-100 fixed lg:relative z-50 -translate-x-full lg:translate-x-0">
+        <div class="h-24 flex items-center gap-3 px-6 shrink-0">
+            <img src="https://img2.pic.in.th/pic/TH-LOTTO.md.png" class="w-10 h-10 rounded-full shadow-lg shadow-green-900/10 p-0.5 bg-white object-cover">
+            <div>
+                <h1 class="font-bold text-xl tracking-tight text-gray-800">TH-LOTTO</h1>
+                <p class="text-[10px] text-gray-400 font-medium">ADMIN DASHBOARD</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-2 px-4 space-y-1 custom-scrollbar">
+            <a onclick="showSection('dashboard', this)" class="nav-item active flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all">
+                <i class="fas fa-th-large w-5 text-center"></i><span>ภาพรวม (Dashboard)</span>
+            </a>
+
+            <div class="px-4 mt-6 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">การเงิน & สมาชิก</div>
+            <a onclick="showSection('Transactions', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all relative">
+                <i class="fas fa-wallet w-5 text-center"></i><span>รายการฝาก-ถอน</span>
+                <span id="badge-tx" class="absolute right-3 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden font-bold">0</span>
+            </a>
+            <a onclick="showSection('Users', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all">
+                <i class="fas fa-users w-5 text-center"></i><span>สมาชิกทั้งหมด</span>
+            </a>
+            <a onclick="showSection('Banks', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all">
+                <i class="fas fa-university w-5 text-center"></i><span>ธนาคารของเว็บ</span>
+            </a>
+
+            <div class="px-4 mt-6 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">จัดการหวย</div>
+            <a onclick="showSection('Bets', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all">
+                <i class="fas fa-ticket-alt w-5 text-center"></i><span>รายการโพยหวย</span>
+            </a>
+            <a onclick="showSection('LotteryTypes', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all">
+                <i class="fas fa-tags w-5"></i><span>ประเภทหวย</span>
+            </a>
+            <a onclick="showSection('LotteryResults', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all">
+                <i class="fas fa-trophy w-5 text-center"></i><span>ผลรางวัล</span>
+            </a>
+            <a onclick="showSection('BlockedNumbers', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all">
+                <i class="fas fa-ban w-5"></i><span>จัดการเลขอั้น</span>
+            </a>
+            <a onclick="showSection('PayoutRates', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all">
+                <i class="fas fa-percent w-5"></i><span>อัตราจ่าย</span>
+            </a>
+
+            <div class="px-4 mt-6 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">เนื้อหา (แสดงแบบการ์ด)</div>
+            <a onclick="showSection('DepositRules', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all">
+                <i class="fas fa-gift w-5"></i><span>โปรโมชั่น</span>
+            </a>
+            <a onclick="showSection('Sliders', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all">
+                <i class="fas fa-images w-5"></i><span>สไลด์แบนเนอร์</span>
+            </a>
+            <a onclick="showSection('Articles', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all">
+                <i class="fas fa-newspaper w-5"></i><span>บทความ/ข่าวสาร</span>
+            </a>
+            <a onclick="showSection('Trending', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all">
+                <i class="fas fa-fire w-5"></i><span>รายการมาแรง</span>
+            </a>
+
+            <div class="px-4 mt-6 mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">ตั้งค่า</div>
+            <a onclick="showSection('Admins', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all">
+                <i class="fas fa-user-shield w-5"></i><span>ผู้ดูแลระบบ</span>
+            </a>
+            <a onclick="showSection('UIText', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all">
+                <i class="fas fa-language w-5"></i><span>ข้อความระบบ</span>
+            </a>
+            <a onclick="showSection('SystemSettings', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all mb-10">
+                <i class="fas fa-desktop w-5 text-center"></i><span>ตั้งค่าหน้าเว็บ</span>
+            </a>
+        </nav>
+        
+        <div class="p-6 border-t border-gray-100">
+            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-green-50 transition-colors cursor-pointer">
+                <div class="w-10 h-10 rounded-full bg-brand-dark text-white flex items-center justify-center font-bold">A</div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-bold text-gray-800 truncate">Super Admin</p>
+                    <p class="text-xs text-green-600 truncate font-semibold">● Online</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col h-full relative min-w-0 overflow-hidden">
+        <header class="h-20 bg-transparent flex items-center justify-between px-6 lg:px-10 shrink-0">
+            <div class="flex items-center gap-4 w-full">
+                <h1 id="page-title" class="text-2xl font-bold text-gray-800">Dashboard</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="showSection('Transactions')" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 shadow-sm border border-gray-100 relative transition-transform hover:scale-105">
+                    <i class="far fa-bell"></i>
+                    <span class="absolute top-2 right-2 min-w-[10px] h-[10px] bg-red-500 rounded-full border-2 border-white hidden" id="noti-badge-header">0</span>
+                </button>
+                <button class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 shadow-sm border border-gray-100 lg:hidden" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 lg:p-10 custom-scrollbar">
+            
+            <!-- Dashboard View -->
+            <div id="section-dashboard" class="section-view fade-in space-y-8">
+                <div><p class="text-gray-400 mt-1">ภาพรวมระบบและสถิติการใช้งาน</p></div>
+                
+                <!-- Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Card 1: System Holdings -->
+                    <div class="bg-brand-dark p-6 rounded-3xl shadow-soft text-white relative overflow-hidden group hover-card">
+                        <div class="absolute -right-6 -top-6 w-32 h-32 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-all"></div>
+                        <div class="flex justify-between items-start mb-4 relative z-10">
+                            <span class="text-green-200/80 font-medium text-sm">ยอดเงินในระบบ</span>
+                            <div class="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm"><i class="fas fa-wallet text-xs text-green-300"></i></div>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-1 relative z-10" id="stat-balance">฿0</h3>
+                        <p class="text-xs text-green-300/70 relative z-10">System Holdings</p>
+                    </div>
+                    
+                    <!-- Card 2: Deposit Today -->
+                    <div class="bg-white p-6 rounded-3xl shadow-soft border border-white relative overflow-hidden group hover-card">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-gray-500 font-medium text-sm">ยอดฝากวันนี้</span>
+                            <div class="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center"><i class="fas fa-arrow-down text-green-600 text-xs"></i></div>
+                        </div>
+                        <h3 class="text-3xl font-bold text-gray-800 mb-1" id="stat-dep">0</h3>
+                        <p class="text-xs text-green-600 bg-green-50 inline-block px-2 py-0.5 rounded-lg font-bold">+ รายรับ</p>
+                    </div>
+                    
+                    <!-- Card 3: Withdraw Today -->
+                    <div class="bg-white p-6 rounded-3xl shadow-soft border border-white relative overflow-hidden group hover-card">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-gray-500 font-medium text-sm">ยอดถอนวันนี้</span>
+                            <div class="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center"><i class="fas fa-arrow-up text-red-600 text-xs"></i></div>
+                        </div>
+                        <h3 class="text-3xl font-bold text-gray-800 mb-1" id="stat-wit">0</h3>
+                        <p class="text-xs text-red-500 bg-red-50 inline-block px-2 py-0.5 rounded-lg font-bold">- รายจ่าย</p>
+                    </div>
+                    
+                    <!-- Card 4: Pending -->
+                    <div class="bg-white p-6 rounded-3xl shadow-soft border border-white relative overflow-hidden group hover-card">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-gray-500 font-medium text-sm">รอดำเนินการ</span>
+                            <div class="w-8 h-8 bg-orange-50 rounded-full flex items-center justify-center"><i class="fas fa-clock text-orange-500 text-xs"></i></div>
+                        </div>
+                        <h3 class="text-3xl font-bold text-gray-800 mb-1" id="stat-pending">0</h3>
+                        <p class="text-xs text-gray-400">Transactions Pending</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Chart -->
+                    <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-soft border border-white">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-lg text-gray-800">Financial Analytics</h3>
+                        </div>
+                        <div class="h-[250px] w-full"><canvas id="dashboardChart"></canvas></div>
+                    </div>
+                    
+                    <!-- Top Winners -->
+                    <div class="bg-white p-6 rounded-3xl shadow-soft border border-white flex flex-col">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-lg text-gray-800">ผู้ถูกรางวัลสูงสุด</h3>
+                        </div>
+                        <div id="top-winners-list" class="flex-1 overflow-y-auto custom-scrollbar space-y-3 max-h-[300px]">
+                            <div class="text-center py-10 text-gray-400 text-xs">Waiting...</div>
+                        </div>
+                        <div class="mt-4 bg-[#14231A] p-5 rounded-3xl relative overflow-hidden text-white shrink-0">
+                            <p class="text-xs text-gray-400 mb-1">Server Time</p>
+                            <h3 class="text-2xl font-mono font-bold tracking-widest" id="live-clock">00:00:00</h3>
+                            <p class="text-[10px] text-gray-400 mt-1" id="live-date">...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Live Feed -->
+                    <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-soft border border-white">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-lg text-gray-800">รายการล่าสุด (Live Feed)</h3>
+                            <button onclick="showSection('Transactions')" class="text-xs bg-gray-100 px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-200 transition-colors">+ ดูทั้งหมด</button>
+                        </div>
+                        <div id="live-feed-list" class="space-y-4">
+                            <div class="text-center py-10 text-gray-400 text-sm">Waiting...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Goal Reached -->
+                    <div class="bg-white p-6 rounded-3xl shadow-soft border border-white">
+                        <h3 class="font-bold text-lg text-gray-800 mb-4">Goal Reached</h3>
+                        <div class="relative h-[180px] flex items-center justify-center">
+                            <canvas id="progressChart"></canvas>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <h2 class="text-3xl font-bold text-gray-800" id="progress-percent">0%</h2>
+                                <p class="text-xs text-gray-400">Goal Reached</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generic Table View / Card View Wrapper -->
+            <div id="section-generic-table" class="section-view hidden fade-in">
+                <!-- Using flex-col structure for table view wrapper -->
+                <div class="flex flex-col gap-6 min-h-[80vh]">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-white">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800" id="table-title">Data List</h2>
+                            <p class="text-gray-400 text-sm mt-1">จัดการข้อมูลในระบบ</p>
+                        </div>
+                        <div class="flex gap-3 w-full md:w-auto">
+                            <!-- Search Bar moved here -->
+                            <div class="search-pill-container flex-1 md:w-64">
+                                <i class="fas fa-search search-pill-icon"></i>
+                                <input type="text" id="global-search" onkeyup="filterGenericTable()" class="search-pill-input" placeholder="ค้นหา...">
+                            </div>
+                            <button id="btn-add-new" class="px-5 py-2.5 bg-brand-dark text-white rounded-full text-sm font-medium hover:bg-green-900 shadow-lg shadow-green-900/20 transition-all flex items-center gap-2 whitespace-nowrap">
+                                <i class="fas fa-plus"></i> เพิ่มข้อมูล
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- List Row Container (One Card Container) for Transactions -->
+                    <div id="list-container" class="list-row-container hidden">
+                        <!-- Rows injected via JS -->
+                    </div>
+
+                    <!-- Standard Table Container for Users -->
+                    <div id="table-container" class="overflow-x-auto rounded-xl border border-gray-100 bg-white hidden">
+                        <table class="w-full text-left border-collapse data-table">
+                            <thead id="table-header"></thead>
+                            <tbody id="table-body"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Card View Container -->
+                    <div id="card-view-container" class="hidden">
+                        <!-- Cards injected via JS -->
+                    </div>
+
+                    <div class="flex justify-between items-center text-xs text-gray-400 px-4">
+                        <span>จำนวนรายการ: <span id="rows-count" class="font-bold text-gray-600">0</span> รายการ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Settings View -->
+            <div id="section-SystemSettings" class="section-view hidden fade-in">
+                <div class="bg-white p-8 rounded-4xl shadow-soft border border-white max-w-5xl mx-auto">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6"><i class="fas fa-cogs mr-2"></i>ตั้งค่าระบบ</h2>
+                    <form id="web-config-form" class="space-y-6">
+                        <div class="p-6 bg-gray-50 rounded-2xl border border-gray-100"><div class="flex items-center justify-between mb-4"><div><p class="font-semibold text-gray-800">โหมดปิดปรับปรุง</p></div><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" name="maintenance_mode" class="sr-only peer toggle-checkbox"><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div></label></div><div class="mb-4"><label class="block text-xs font-bold text-gray-500 uppercase mb-2">ชื่อเว็บไซต์</label><input type="text" name="site_name" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 outline-none"></div></div>
+                        <div class="p-6 bg-gray-50 rounded-2xl border border-gray-100"><h3 class="font-bold text-gray-700 mb-4 border-b pb-2">ประกาศ Popup</h3><div class="flex items-center gap-2 mb-4"><input type="checkbox" name="announcement_active" id="anno_active" class="w-4 h-4 text-green-600 rounded"><label for="anno_active" class="text-sm text-gray-700 font-medium">เปิดใช้งาน</label></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">ข้อความ</label><textarea name="announcement_text" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 outline-none"></textarea></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">รูปภาพ (URL)</label><input type="text" name="announcement_image" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 outline-none"></div></div></div>
+                        <div class="p-6 bg-gray-50 rounded-2xl border border-gray-100"><h3 class="font-bold text-gray-700 mb-4 border-b pb-2">การเงิน</h3><div class="grid grid-cols-2 md:grid-cols-3 gap-6"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">ฝากขั้นต่ำ</label><input type="number" name="min_deposit" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 outline-none"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">ถอนขั้นต่ำ</label><input type="number" name="min_withdraw" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 outline-none"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">ถอนสูงสุด/วัน</label><input type="number" name="max_withdraw_per_day" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 outline-none"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">เวลาโอน (วินาที)</label><input type="number" name="deposit_timeout_sec" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 outline-none"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">คอมมิชชั่น</label><input type="number" step="0.01" name="commission_rate" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 outline-none"></div></div></div>
+                        <div class="p-6 bg-gray-50 rounded-2xl border border-gray-100"><h3 class="font-bold text-gray-700 mb-4 border-b pb-2">บัญชีรับเงิน</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">ธนาคาร</label><input type="text" name="receiving_bank_name" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 outline-none"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">เลขบัญชี</label><input type="text" name="receiving_account_number" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 outline-none"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">ชื่อบัญชี</label><input type="text" name="receiving_account_name" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 outline-none"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">PromptPay</label><input type="text" name="promptpay_number" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 outline-none"></div></div></div>
+                        <div class="p-6 bg-gray-50 rounded-2xl border border-gray-100"><h3 class="font-bold text-gray-700 mb-4 border-b pb-2">ติดต่อ & เนื้อหา</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">LINE ID</label><input type="text" name="contact_line_official_id" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 outline-none"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">เบอร์โทร</label><input type="text" name="contact_phone_number" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 outline-none"></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">เวลาทำการ</label><input type="text" name="contact_working_hours" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 outline-none"></div></div><div><label class="block text-xs font-bold text-gray-500 uppercase mb-2">เงื่อนไขการใช้งาน (HTML)</label><textarea name="profile_terms_content" rows="4" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-green-500 outline-none font-mono text-xs"></textarea></div></div>
+                        <div class="flex justify-end pt-4 pb-10"><button type="button" onclick="saveWebConfig()" class="px-8 py-4 bg-brand-dark text-white rounded-xl font-bold hover:bg-green-900 shadow-lg">บันทึก</button></div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Form -->
+    <div id="dynamic-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm fade-in">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div id="modal-cover-container" class="modal-cover-container">
+                <div class="modal-cover-bg" id="modal-cover-bg"></div>
+                <img id="modal-cover" src="" class="modal-cover-img relative z-10 mx-auto" onclick="openLightbox(this.src)" style="cursor: zoom-in;">
+                <div class="absolute top-4 right-4 z-20"><span id="modal-status-badge" class="badge-base shadow-sm">STATUS</span></div>
+            </div>
+            <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-start bg-white relative z-10">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 leading-tight" id="modal-title">...</h3>
+                    <p class="text-xs text-gray-400 font-mono mt-1 flex items-center gap-1"><i class="fas fa-hashtag text-gray-300"></i> <span id="modal-id-display">ID</span></p>
+                </div>
+                <button onclick="closeModal('dynamic-modal')" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition absolute top-6 right-6"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-8 overflow-y-auto custom-scrollbar flex-1 bg-[#F9FAFB]">
+                <div id="transaction-actions" class="hidden mb-8 bg-orange-50 p-4 rounded-xl border border-orange-100 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center animate-pulse shrink-0 text-lg"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div><p class="font-bold text-orange-900 text-sm">รอการตรวจสอบ (Pending)</p><p class="text-xs text-orange-700">กรุณาตรวจสอบสลิปและยอดเงินก่อนอนุมัติ</p></div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="handleTransactionAction('rejected')" class="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-lg text-sm font-bold hover:bg-red-50 transition shadow-sm">ปฏิเสธ</button>
+                        <button onclick="handleTransactionAction('completed')" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700 transition shadow-md shadow-green-600/20">อนุมัติยอด</button>
+                    </div>
+                </div>
+                <form id="dynamic-form">
+                    <input type="hidden" id="dynamic-id">
+                    <div id="dynamic-fields" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                    <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
+                        <button type="button" onclick="closeModal('dynamic-modal')" class="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition">ปิด</button>
+                        <button type="button" id="btn-save-form" onclick="submitForm()" class="px-6 py-2.5 bg-brand-dark text-white rounded-xl text-sm font-bold hover:bg-green-900 shadow-md transition flex items-center gap-2"><i class="fas fa-save"></i> บันทึกข้อมูล</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div id="lightbox" class="fixed inset-0 z-[70] bg-black/95 hidden flex items-center justify-center p-4 backdrop-blur-md cursor-zoom-out fade-in" onclick="this.classList.add('hidden')"><img id="lightbox-img" src="" class="max-w-full max-h-[95vh] rounded-lg shadow-2xl border border-white/20"></div>
+
+    <script>
+        // ⚠️ อย่าลืมแก้ URL ด้านล่างนี้เป็น URL ของ Web App คุณ
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbySn2wOuHTga7lR-zFRZ4P6RXLM551m3uU304pdwsiidHgQgcKL0ptmU-0gBWd3DM-I-w/exec';
+
+        let allData = { CACHE: {}, BANKS: [] };
+        let currentSheet = 'dashboard';
+        let charts = {};
+
+        // === CONFIG: BANK ICONS FALLBACK ===
+        const BANK_ICONS = {
+            'kbank': 'https://raw.githubusercontent.com/guinguin/thai-bank-icons/master/official/kbank.min.png',
+            'scb': 'https://raw.githubusercontent.com/guinguin/thai-bank-icons/master/official/scb.min.png',
+            'bbl': 'https://raw.githubusercontent.com/guinguin/thai-bank-icons/master/official/bbl.min.png',
+            'ktb': 'https://raw.githubusercontent.com/guinguin/thai-bank-icons/master/official/ktb.min.png',
+            'gsb': 'https://raw.githubusercontent.com/guinguin/thai-bank-icons/master/official/gsb.min.png',
+            'bay': 'https://raw.githubusercontent.com/guinguin/thai-bank-icons/master/official/bay.min.png',
+            'ttb': 'https://raw.githubusercontent.com/guinguin/thai-bank-icons/master/official/ttb.min.png',
+            'tmn': 'https://raw.githubusercontent.com/guinguin/thai-bank-icons/master/official/truemoney.min.png',
+            'baac': 'https://raw.githubusercontent.com/guinguin/thai-bank-icons/master/official/baac.min.png',
+            'default': 'https://cdn-icons-png.flaticon.com/512/2830/2830284.png'
+        };
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            startClock();
+            loadBankLogos(); 
+            showSection('dashboard', document.querySelector('.nav-item'));
+            initCharts();
+            setInterval(() => { if(currentSheet==='dashboard') loadDashboardData(); }, 10000); 
+        });
+
+        // --- LOAD BANKS FROM SHEET ---
+        function loadBankLogos() {
+            callAPI('getAdminTableData', {sheetName: 'Banks'}, (res) => {
+                if(res.success) {
+                    allData.BANKS = res.data;
+                    if(currentSheet === 'dashboard') loadDashboardData();
+                    else if(currentSheet === 'Users') loadGenericTable('Users');
+                }
+            });
+        }
+
+        function getBankLogo(bankName) {
+            if (!bankName) return BANK_ICONS['default'];
+            if (allData.BANKS && allData.BANKS.length > 0) {
+                const found = allData.BANKS.find(b => 
+                    String(b['ชื่อธนาคาร']).trim() === String(bankName).trim() ||
+                    String(b['รหัสธนาคาร']).trim().toLowerCase() === String(bankName).trim().toLowerCase()
+                );
+                if (found && found['ลิงก์โลโก้']) return found['ลิงก์โลโก้'];
+            }
+            const lowerName = bankName.toLowerCase();
+            if (lowerName.includes('kbank') || lowerName.includes('กสิกร')) return BANK_ICONS['kbank'];
+            if (lowerName.includes('scb') || lowerName.includes('ไทยพาณิชย์')) return BANK_ICONS['scb'];
+            if (lowerName.includes('bbl') || lowerName.includes('กรุงเทพ')) return BANK_ICONS['bbl'];
+            if (lowerName.includes('ktb') || lowerName.includes('กรุงไทย')) return BANK_ICONS['ktb'];
+            if (lowerName.includes('gsb') || lowerName.includes('ออมสิน')) return BANK_ICONS['gsb'];
+            if (lowerName.includes('bay') || lowerName.includes('กรุงศรี')) return BANK_ICONS['bay'];
+            if (lowerName.includes('ttb') || lowerName.includes('ทหารไทย') || lowerName.includes('tmb')) return BANK_ICONS['ttb'];
+            if (lowerName.includes('true') || lowerName.includes('wallet') || lowerName.includes('tmn')) return BANK_ICONS['tmn'];
+            if (lowerName.includes('baac') || lowerName.includes('ธกส')) return BANK_ICONS['baac'];
+            return BANK_ICONS['default'];
+        }
+
+        function renderBankWithLogo(bankName, accNum) {
+            let displayBank = bankName || '';
+            let displaySub = accNum || '';
+            if(!accNum && displayBank.includes('|')) {
+                const parts = displayBank.split('|');
+                displayBank = parts[0].trim();
+                displaySub = parts[1] ? parts[1].trim() : '';
+            }
+            const logoUrl = getBankLogo(displayBank);
+            return `
+                <div class="flex items-center gap-2 list-col">
+                    <img src="${logoUrl}" class="w-8 h-8 rounded-full shadow-sm object-cover border border-gray-100 p-0.5 bg-white shrink-0" onerror="this.src='${BANK_ICONS['default']}'">
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-gray-700 text-sm whitespace-nowrap">${displayBank}</span>
+                        ${displaySub ? `<span class="text-xs text-gray-500 font-mono border-l pl-2 border-gray-300 whitespace-nowrap">${displaySub}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCellContent(val, type) {
+            if (!val && val !== 0) return '-';
+            const strVal = String(val);
+            if (type === 'image' || strVal.match(/\.(jpeg|jpg|gif|png|webp)($|\?)/i)) {
+                return `<img src="${strVal}" class="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm cursor-zoom-in" onclick="event.stopPropagation(); openLightbox('${strVal}')">`;
+            }
+            if (strVal.startsWith('http://') || strVal.startsWith('https://')) {
+                return `<a href="${strVal}" target="_blank" class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition shadow-sm" onclick="event.stopPropagation();"><i class="fas fa-link"></i></a>`;
+            }
+            return `<span class="truncate max-w-[200px] block" title="${strVal}">${strVal}</span>`;
+        }
+
+        // --- DASHBOARD LOGIC (Updated to lookup Users for Feed) ---
+        function loadDashboardData() {
+            callAPI('getAdminStats', {}, (res) => {
+                if(res.success) {
+                    document.getElementById('stat-balance').innerText = '฿' + formatNumber(res.data.totalBets); 
+                    document.getElementById('stat-dep').innerText = formatNumber(res.data.totalDeposits);
+                    document.getElementById('stat-wit').innerText = formatNumber(res.data.totalWithdrawals);
+                    const dailyTarget = 10000; 
+                    const currentDeposit = res.data.totalDeposits || 0;
+                    let percent = Math.round((currentDeposit / dailyTarget) * 100);
+                    if (percent > 100) percent = 100;
+                    document.getElementById('progress-percent').innerText = percent + '%';
+                    if (charts.progress) {
+                        charts.progress.data.datasets[0].data = [percent, 100 - percent];
+                        charts.progress.data.datasets[0].backgroundColor = [percent >= 100 ? '#047857' : '#144026', '#E5E7EB'];
+                        charts.progress.update();
+                    }
+                }
+            });
+
+            callAPI('getDashboardChartData', {}, (res) => {
+                if(res.success && charts.main) {
+                    charts.main.data.labels = res.data.trends.labels;
+                    charts.main.data.datasets[0].data = res.data.trends.deposit;
+                    charts.main.data.datasets[1].data = res.data.trends.withdraw;
+                    charts.main.update();
+                }
+            });
+
+            if(!allData.CACHE['Users']) {
+                callAPI('getAdminTableData', {sheetName: 'Users'}, (res) => {
+                    if(res.success) {
+                        allData.CACHE['Users'] = res.data; 
+                        fetchLiveFeed(); 
+                    }
+                });
+            } else {
+                fetchLiveFeed(); 
+            }
+
+            callAPI('getAdvancedStats', {}, (res) => {
+                if(res.success) renderTopWinners(res.data.topWinners);
+            });
+        }
+
+        function fetchLiveFeed() {
+            callAPI('getExtendedDashboardData', {}, (res) => {
+                if(res.success) {
+                    const totalPending = res.data.pending.deposit + res.data.pending.withdraw;
+                    document.getElementById('stat-pending').innerText = totalPending;
+                    const badge = document.getElementById('badge-tx');
+                    badge.innerText = totalPending;
+                    badge.classList.toggle('hidden', totalPending === 0);
+                    renderLiveFeed(res.data.feed);
+                }
+            });
+        }
+
+        function renderLiveFeed(feed) {
+            const list = document.getElementById('live-feed-list');
+            if(!feed || feed.length === 0) { 
+                list.innerHTML = '<div class="text-center py-10 text-gray-400 text-sm">Waiting for transactions...</div>'; 
+                return; 
+            }
+            const users = allData.CACHE['Users'] || []; 
+            list.innerHTML = feed.map(item => {
+                const type = item['ประเภท'] || 'deposit';
+                const isDep = type === 'deposit';
+                const amount = item['จำนวนเงิน'] || 0;
+                const status = item['สถานะ'] || 'pending';
+                const userId = item['รหัสผู้ใช้'];
+                const rawDate = item['วันที่สร้างรายการ'] || '';
+
+                let bankName = 'Banking'; 
+                let foundUser = users.find(u => u['รหัสผู้ใช้'] === userId);
+                if (foundUser && foundUser['ชื่อธนาคาร']) {
+                    bankName = foundUser['ชื่อธนาคาร'];
+                }
+
+                const logo = getBankLogo(bankName);
+                const titleText = isDep ? `Deposit from ${bankName}` : `Withdraw to ${bankName}`;
+
+                let timeDisplay = '00:00';
+                if(rawDate) {
+                    try {
+                        const dateObj = new Date(rawDate);
+                        timeDisplay = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                    } catch(e) {
+                        timeDisplay = rawDate.split(' ')[1]?.substring(0, 5) || rawDate;
+                    }
+                }
+
+                const badgeClass = isDep ? 'bg-green-500' : 'bg-red-500';
+                const badgeText = isDep ? 'ฝากเครดิต' : 'ถอนเงิน';
+                const amountColor = isDep ? 'text-green-500' : 'text-red-500';
+                const amountPrefix = isDep ? '+' : '';
+
+                return `
+                <div class="flex items-center justify-between p-3 hover:bg-gray-50 transition rounded-xl border-b border-gray-50 last:border-0">
+                    <div class="flex items-center gap-4">
+                        <div class="relative shrink-0">
+                            <img src="${logo}" class="w-10 h-10 rounded-xl shadow-sm object-cover border border-gray-100 p-1 bg-white" onerror="this.src='${BANK_ICONS['default']}'">
+                            <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border border-white flex items-center justify-center text-[8px] text-white ${badgeClass}">
+                                <i class="fas ${isDep ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+                            </div>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-bold text-gray-800 truncate leading-tight mb-1">${titleText}</p>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] text-gray-400 font-mono flex items-center gap-1">
+                                    <i class="far fa-clock"></i> ${timeDisplay}
+                                </span>
+                                <span class="${badgeClass} text-white text-[9px] px-1.5 py-0.5 rounded font-bold leading-none">
+                                    ${badgeText}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right pl-2 shrink-0">
+                        <p class="font-bold ${amountColor} text-sm font-mono">${amountPrefix}${formatNumber(amount)}</p>
+                        <p class="text-[10px] text-gray-400 capitalize">${status}</p>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function renderTopWinners(winners) {
+            const list = document.getElementById('top-winners-list');
+            if(!winners || winners.length === 0) { list.innerHTML = '<div class="text-center py-10 text-gray-400 text-xs">ยังไม่มีผู้ถูกรางวัล</div>'; return; }
+            list.innerHTML = winners.map((w, i) => `<div class="flex items-center justify-between p-3 bg-gradient-to-r from-yellow-50 to-white rounded-xl border border-yellow-100"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-yellow-400 text-white flex items-center justify-center font-bold text-xs shadow-sm">${i+1}</div><div><p class="text-xs font-bold text-gray-800">${w.userId}</p></div></div><span class="text-green-600 font-bold text-sm">+${formatNumber(w.amount)}</span></div>`).join('');
+        }
+
+        // --- FUNCTIONS ---
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-open'); document.getElementById('sidebar-overlay').classList.toggle('hidden'); }
+
+        function showSection(id, btn) {
+            currentSheet = id;
+            document.querySelectorAll('.section-view').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+
+            if(id === 'dashboard') {
+                document.getElementById('section-dashboard').classList.remove('hidden');
+                loadDashboardData();
+            } else if (id === 'SystemSettings') {
+                document.getElementById('section-SystemSettings').classList.remove('hidden');
+                loadWebConfig();
+            } else {
+                document.getElementById('section-generic-table').classList.remove('hidden');
+                document.getElementById('table-title').innerText = translateTitle(id);
+                loadGenericTable(id);
+            }
+            if (window.innerWidth < 1024) toggleSidebar();
+        }
+
+        function translateTitle(id) {
+            const map = {'Transactions':'รายการฝาก-ถอน', 'Users':'สมาชิกทั้งหมด', 'Bets':'โพยหวย', 'Banks':'ธนาคารเว็บ', 'LotteryTypes':'ประเภทหวย', 'LotteryResults':'ผลรางวัล', 'BlockedNumbers':'เลขอั้น', 'DepositRules':'โปรโมชั่น', 'Sliders':'สไลด์แบนเนอร์', 'Articles':'บทความ/ข่าวสาร', 'Trending':'รายการมาแรง', 'PayoutRates': 'อัตราจ่าย', 'UIText': 'ข้อความระบบ'};
+            return map[id] || id;
+        }
+
+        function loadGenericTable(sheetKey) {
+            const isCardView = ['DepositRules', 'Articles', 'Sliders', 'Trending', 'LotteryTypes'].includes(sheetKey);
+            const isListView = ['Transactions'].includes(sheetKey); 
+            
+            document.getElementById('table-container').classList.toggle('hidden', isCardView || isListView);
+            document.getElementById('list-container').classList.toggle('hidden', !isListView);
+            document.getElementById('card-view-container').classList.toggle('hidden', !isCardView);
+            
+            const container = document.getElementById('card-view-container');
+            container.className = isCardView ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' : 'hidden';
+            
+            document.getElementById('table-body').innerHTML = '<tr><td colspan="100%" class="p-10 text-center text-gray-400">Loading Table...</td></tr>';
+            document.getElementById('list-container').innerHTML = '<div class="text-center py-10 text-gray-400">Loading List...</div>';
+
+            if (sheetKey === 'Transactions' && !allData.CACHE['Users']) {
+                 callAPI('getAdminTableData', {sheetName: 'Users'}, (res) => {
+                    if(res.success) {
+                        allData.CACHE['Users'] = res.data;
+                        loadGenericTable(sheetKey); 
+                    }
+                });
+                return;
+            }
+
+            if(allData.CACHE[sheetKey]) { processDataRender(sheetKey, allData.CACHE[sheetKey]); callAPI('getAdminTableData', {sheetName: sheetKey}, (res) => { if(res.success) { allData.CACHE[sheetKey] = res.data.reverse(); processDataRender(sheetKey, res.data); } }); } else { callAPI('getAdminTableData', {sheetName: sheetKey}, (res) => { if(res.success) { allData.CACHE[sheetKey] = res.data.reverse(); processDataRender(sheetKey, res.data); } }); }
+            document.getElementById('btn-add-new').onclick = () => openModal(sheetKey);
+        }
+
+        function processDataRender(sheetKey, data) {
+            const isCardView = ['DepositRules', 'Articles', 'Sliders', 'Trending', 'LotteryTypes'].includes(sheetKey);
+            const isListView = ['Transactions'].includes(sheetKey);
+            document.getElementById('rows-count').innerText = data.length;
+            if (isCardView) renderCardView(sheetKey, data);
+            else if (isListView) renderListView(sheetKey, data);
+            else renderTableView(sheetKey, data);
+        }
+
+        function renderCardView(sheetKey, data) {
+            const container = document.getElementById('card-view-container');
+            if(!data || data.length === 0) { container.innerHTML = '<div class="col-span-full text-center text-gray-400">ไม่พบข้อมูล</div>'; return; }
+            const schema = SCHEMAS[sheetKey];
+            const idKey = schema[0].k;
+            const imgKey = schema.find(s => s.t === 'image')?.k;
+            const titleKey = schema[1].k;
+            const statusKey = schema.find(s => s.t === 'toggle')?.k;
+            container.innerHTML = data.map(row => {
+                const id = row[idKey];
+                const imgUrl = imgKey && row[imgKey] ? row[imgKey] : 'https://placehold.co/400x225?text=No+Image';
+                const title = row[titleKey] || 'No Title';
+                const isActive = statusKey ? (row[statusKey] === 'active' || row[statusKey] === true || row[statusKey] === 'TRUE') : true;
+                return `<div class="card-item group"><div class="card-img-wrapper"><img src="${imgUrl}" class="card-img group-hover:scale-105 transition-transform duration-500" loading="lazy"><div class="absolute top-2 right-2"><span class="px-2 py-1 rounded-md text-[10px] font-bold shadow-sm ${isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${isActive ? 'เปิดใช้งาน' : 'ปิด'}</span></div></div><div class="card-body"><h3 class="card-title">${title}</h3><div class="text-xs text-gray-400 mb-2 font-mono">ID: ${id}</div><div class="card-footer"><button onclick="deleteItem('${sheetKey}', '${id}')" class="text-gray-400 hover:text-red-500 transition text-sm"><i class="fas fa-trash"></i> ลบ</button><button onclick="openModal('${sheetKey}', '${id}')" class="bg-brand-dark text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-green-800 transition shadow-sm">แก้ไข</button></div></div></div>`;
+            }).join('');
+        }
+
+        function renderListView(sheetKey, data) {
+            const container = document.getElementById('list-container');
+            if(!data || data.length === 0) { container.innerHTML = '<div class="text-center py-10 text-gray-400">ไม่พบข้อมูล</div>'; return; }
+            
+            const rowsHtml = data.map(row => {
+                const schema = SCHEMAS[sheetKey];
+                const idKey = schema[0].k;
+                const id = row[idKey];
+                const actions = `<button onclick="openModal('${sheetKey}', '${id}')" class="w-8 h-8 rounded-lg bg-green-500 hover:bg-green-600 text-white shadow-sm flex items-center justify-center transition-transform hover:scale-105 ml-2"><i class="fas fa-edit"></i></button><button onclick="deleteItem('${sheetKey}', '${id}')" class="w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-sm flex items-center justify-center transition-transform hover:scale-105 ml-2"><i class="fas fa-trash-alt"></i></button>`;
+                
+                if (sheetKey === 'Transactions') {
+                    const isDep = row['ประเภท'] === 'deposit';
+                    const userId = row['รหัสผู้ใช้'];
+                    const user = allData.CACHE['Users'] ? allData.CACHE['Users'].find(u => u['รหัสผู้ใช้'] === userId) : null;
+                    let bankName = 'ไม่ระบุ';
+                    let accNum = '';
+                    if (user) {
+                        bankName = user['ชื่อธนาคาร'] || 'ไม่ระบุ';
+                        accNum = user['เลขที่บัญชี'] || '';
+                    } else {
+                        const rawBank = (row['ข้อมูลธนาคาร']||'').split('|')[0].trim();
+                        if (!rawBank.startsWith('Time:')) bankName = rawBank;
+                    }
+                    const logo = getBankLogo(bankName);
+                    const slipUrl = row['ลิงก์สลิป']; 
+                    let slipDisplay = slipUrl ? `<img src="${slipUrl}" class="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm cursor-zoom-in hover:scale-110 transition-transform" onclick="event.stopPropagation(); openLightbox('${slipUrl}')" title="ดูสลิป">` : `<div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs"><i class="fas fa-receipt"></i></div>`;
+                    
+                    return `<div class="list-row group"><div class="flex items-center gap-4 min-w-[220px] list-col"><div class="w-10 h-10 rounded-xl ${isDep?'bg-green-100 text-green-600':'bg-red-100 text-red-600'} flex items-center justify-center text-lg shrink-0 shadow-sm"><i class="fas ${isDep?'fa-arrow-down':'fa-arrow-up'}"></i></div><div><div class="text-[10px] text-gray-400 font-mono uppercase mb-0.5">${id}</div><div class="font-bold text-gray-800 text-xs">${isDep ? 'ฝากเงิน' : 'ถอนเงิน'} โดย ${userId}</div></div></div><div class="min-w-[180px] flex items-center gap-2 list-col"><img src="${logo}" class="w-8 h-8 rounded-full shadow-sm object-cover bg-white" onerror="this.src='${BANK_ICONS['default']}'"><div><div class="text-xs font-bold text-gray-700">${bankName}</div><div class="text-[10px] text-gray-500">${accNum}</div></div></div><div class="text-base font-bold ${isDep?'text-green-600':'text-red-600'} font-mono min-w-[120px] text-right list-col">${isDep?'+':'-'}฿${formatNumber(row['จำนวนเงิน'])}</div><div class="min-w-[100px] text-center list-col flex justify-center items-center gap-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${row['สถานะ']==='completed'?'bg-green-100 text-green-700':(row['สถานะ']==='pending'?'bg-orange-100 text-orange-700':'bg-red-100 text-red-700')}">${row['สถานะ']}</span>${slipDisplay}</div><div class="flex items-center justify-end min-w-[100px] list-col">${actions}</div></div>`;
+                }
+                return '';
+            }).join('');
+            container.innerHTML = '<div class="flex flex-col">' + rowsHtml + '</div>';
+        }
+
+        function renderTableView(sheetKey, data) {
+            const thead = document.getElementById('table-header');
+            const tbody = document.getElementById('table-body');
+            let schema = SCHEMAS[sheetKey];
+            const idKey = schema[0].k;
+            thead.innerHTML = `<tr class="bg-gray-50 border-b border-gray-200 text-left whitespace-nowrap text-gray-500 text-xs uppercase tracking-wider">${schema.map(s => `<th class="px-6 py-4 font-semibold">${s.l}</th>`).join('')}<th class="px-6 py-4 text-right font-semibold">จัดการ</th></tr>`;
+            tbody.innerHTML = data.map(row => {
+                const id = row[idKey];
+                let html = `<tr class="hover:bg-gray-50 border-b border-gray-100 transition-colors text-sm text-gray-700 group">`;
+                schema.forEach(col => {
+                    let val = row[col.k];
+                    let display = val;
+                    if(col.t === 'toggle') { const isActive = (val === 'active' || val === true || val === 'TRUE'); display = isActive ? `<span class="badge-active"><i class="fas fa-check-circle"></i> ACTIVE</span>` : `<span class="badge-inactive"><i class="fas fa-times-circle"></i> BANNED</span>`; }
+                    else if(col.t === 'status') { display = `<span class="px-2 py-0.5 rounded text-xs font-bold ${['completed','approved'].includes(val)?'bg-green-100 text-green-700':(['pending'].includes(val)?'bg-orange-100 text-orange-700':'bg-red-100 text-red-700')}">${val}</span>`; }
+                    else if(col.t === 'number') { const numVal = Number(val) || 0; const colorClass = (col.k === 'ยอดเงินคงเหลือ' && numVal > 0) ? 'text-green-600 font-bold' : (col.k === 'ยอดเงินคงเหลือ' ? 'text-gray-400' : ''); display = `<span class="font-mono font-medium ${colorClass}">${formatNumber(val)}</span>`; }
+                    else if(col.t === 'bank_user' || col.t === 'bank_tx') { display = renderBankWithLogo(val, ''); }
+                    else { display = renderCellContent(val, col.t); }
+                    html += `<td class="px-6 py-4 whitespace-nowrap">${display}</td>`;
+                });
+                html += `<td class="px-6 py-4 text-right flex justify-end gap-2"><button onclick="openModal('${sheetKey}', '${id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition"><i class="fas fa-edit"></i></button><button onclick="deleteItem('${sheetKey}', '${id}')" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition"><i class="fas fa-trash-alt"></i></button></td></tr>`;
+                return html;
+            }).join('');
+        }
+
+        const SCHEMAS = {
+            'Transactions': [
+                {k:'รหัสธุรกรรม', l:'รหัสรายการ', r:true}, {k:'รหัสผู้ใช้', l:'รหัสสมาชิก'}, {k:'ประเภท', l:'ประเภท', t:'select', o:['deposit','withdraw']}, 
+                {k:'จำนวนเงิน', l:'จำนวนเงิน', t:'number', highlight:true}, {k:'สถานะ', l:'สถานะ', t:'status'}, {k:'ข้อมูลธนาคาร', l:'เวลา/ธนาคาร', t:'bank_tx'}, 
+                {k:'รายละเอียด', l:'หมายเหตุ'}, {k:'ลิงก์สลิป', l:'สลิปโอนเงิน', t:'image', cover:true}, {k:'วันที่สร้างรายการ', l:'เวลาแจ้ง', r:true},
+                {k:'วันที่ดำเนินการ', l:'เวลาอนุมัติ', r:true}, {k:'ดำเนินการโดย', l:'แอดมิน', r:true}
+            ],
+            'Users': [{k:'รหัสผู้ใช้', l:'รหัสสมาชิก', r:true}, {k:'ชื่อผู้ใช้', l:'เบอร์โทร'}, {k:'เบอร์โทรศัพท์', l:'เบอร์โทรศัพท์'}, {k:'รหัสPIN', l:'PIN', t:'number'}, {k:'ชื่อ-สกุล', l:'ชื่อ-นามสกุล'}, {k:'ยอดเงินคงเหลือ', l:'เครดิต', t:'number'}, {k:'รายได้แนะนำ', l:'ค่าคอมมิชชั่น', t:'number'}, {k:'ชื่อธนาคาร', l:'ธนาคาร', t:'bank_user', o:['KBANK','SCB','KTB','BBL','GSB','BAY','TTB','TMB','BAAC']}, {k:'เลขที่บัญชี', l:'เลขบัญชี'}, {k:'ชื่อบัญชี', l:'ชื่อบัญชี'}, {k:'รหัสผู้แนะนำ', l:'ผู้แนะนำ'}, {k:'สถานะ', l:'สถานะ', t:'toggle'}, {k:'วันที่สมัคร', l:'วันที่สมัคร', r:true}, {k:'อัปเดตล่าสุด', l:'อัปเดตล่าสุด', r:true}],
+            'Bets': [{k:'รหัสโพย', l:'รหัสโพย', r:true}, {k:'รหัสผู้ใช้', l:'สมาชิก'}, {k:'รหัสประเภทหวย', l:'ประเภทหวย'}, {k:'งวดวันที่', l:'งวดวันที่'}, {k:'ประเภทการแทง', l:'รูปแบบ'}, {k:'ตัวเลข', l:'เลขที่แทง', highlight:true}, {k:'จำนวนเงิน', l:'ยอดแทง', t:'number'}, {k:'อัตราจ่าย', l:'อัตราจ่าย', t:'number'}, {k:'ยอดชนะ', l:'ยอดที่ถูกรางวัล', t:'number'}, {k:'สถานะโพย', l:'สถานะ', t:'status_bet'}, {k:'วันที่แทง', l:'เวลาแทง', r:true}, {k:'วันที่คิดผล', l:'เวลาตัดรอบ', r:true}],
+            'LotteryTypes': [{k:'รหัสประเภทหวย', l:'รหัสหวย', r:true}, {k:'ชื่อย่อ', l:'ชื่อย่อ', highlight:true}, {k:'ชื่อเต็ม', l:'ชื่อหวยเต็ม'}, {k:'เวลาปิดรับ', l:'เวลาปิด'}, {k:'รอบ/วันที่ออก', l:'รอบออกผล'}, {k:'เปิดใช้งาน', l:'เปิดรับแทง', t:'toggle'}, {k:'ยอดนิยม', l:'Hot', t:'toggle'}, {k:'ลิงก์วิดีโอ', l:'ลิงก์ถ่ายทอดสด'}, {k:'อัตราจ่าย_สองตัวบน', l:'จ่าย 2ตัวบน', t:'number'}, {k:'อัตราจ่าย_สองตัวล่าง', l:'จ่าย 2ตัวล่าง', t:'number'}, {k:'อัตราจ่าย_สามตัวบน', l:'จ่าย 3ตัวบน', t:'number'}, {k:'อัตราจ่าย_สามตัวล่าง', l:'จ่าย 3ตัวล่าง', t:'number'}, {k:'อัตราจ่าย_สามตัวหน้า', l:'จ่าย 3ตัวหน้า', t:'number'}, {k:'อัตราจ่าย_สามตัวท้าย', l:'จ่าย 3ตัวท้าย', t:'number'}, {k:'อัตราจ่าย_สามตัวโต๊ด', l:'จ่าย 3ตัวโต๊ด', t:'number'}, {k:'อัตราจ่าย_สี่ตัวตรง', l:'จ่าย 4ตัวตรง', t:'number'}, {k:'อัตราจ่าย_สี่ตัวโต๊ด', l:'จ่าย 4ตัวโต๊ด', t:'number'}, {k:'ลิงก์รูปภาพ', l:'รูปปก', t:'image', cover:true}, {k:'วันที่สร้าง', l:'วันที่สร้าง', r:true}, {k:'อัปเดตล่าสุด', l:'แก้ไขล่าสุด', r:true}],
+            'LotteryResults': [{k:'รหัสผลรางวัล', l:'รหัส', r:true}, {k:'รหัสประเภทหวย', l:'รหัสหวย'}, {k:'งวดวันที่', l:'งวดวันที่'}, {k:'รางวัล6ตัว', l:'รางวัลที่ 1'}, {k:'รางวัล5ตัว', l:'รางวัล 5 ตัว'}, {k:'รางวัล4ตัว', l:'รางวัล 4 ตัว'}, {k:'3ตัวหน้า', l:'3 ตัวหน้า'}, {k:'3ตัวหลัง', l:'3 ตัวหลัง'}, {k:'2ตัวล่าง', l:'2 ตัวล่าง'}, {k:'วันที่บันทึกผล', l:'เวลาบันทึก', r:true}],
+            'DepositRules': [{k:'รหัสกฎ', l:'รหัส', r:true}, {k:'หัวข้อโปร', l:'ชื่อโปรโมชั่น', highlight:true}, {k:'ฝากขั้นต่ำ', l:'ฝากขั้นต่ำ', t:'number'}, {k:'โบนัส(%)', l:'โบนัส %', t:'number'}, {k:'โบนัส(บาท)', l:'โบนัส (บาท)', t:'number'}, {k:'เทิร์นโอเวอร์', l:'ทำเทิร์น', t:'number'}, {k:'ถอนสูงสุด', l:'ถอนสูงสุด', t:'number'}, {k:'ข้อความโปร (บรรทัด1)', l:'เงื่อนไข 1'}, {k:'ข้อความโปร (บรรทัด2)', l:'เงื่อนไข 2'}, {k:'เปิดใช้งาน', l:'เปิดใช้งาน', t:'toggle'}, {k:'ลิงก์รูปภาพ', l:'รูปโปรโมชั่น', t:'image', cover:true}],
+            'Sliders': [{k:'รหัสสไลด์', l:'รหัส', r:true}, {k:'หัวข้อ', l:'หัวข้อ', highlight:true}, {k:'ลิงก์ปลายทาง', l:'ลิงก์ปลายทาง'}, {k:'ลำดับ', l:'ลำดับ', t:'number'}, {k:'เปิดใช้งาน', l:'เปิดใช้งาน', t:'toggle'}, {k:'ลิงก์รูปภาพ', l:'รูปสไลด์', t:'image', cover:true}, {k:'วันที่สร้าง', l:'วันที่สร้าง', r:true}, {k:'อัปเดตล่าสุด', l:'แก้ไขล่าสุด', r:true}],
+            'Articles': [{k:'รหัสบทความ', l:'รหัส', r:true}, {k:'หัวข้อ', l:'หัวข้อข่าว', highlight:true}, {k:'เนื้อหา', l:'เนื้อหา', t:'textarea'}, {k:'เปิดใช้งาน', l:'เปิดใช้งาน', t:'toggle'}, {k:'ลิงก์รูปภาพ', l:'รูปปก', t:'image', cover:true}, {k:'วันที่สร้าง', l:'วันที่สร้าง', r:true}, {k:'อัปเดตล่าสุด', l:'แก้ไขล่าสุด', r:true}],
+            'Trending': [{k:'รหัส', l:'รหัส', r:true}, {k:'หัวข้อ', l:'ชื่อรายการ', highlight:true}, {k:'ลิงก์', l:'ลิงก์ปลายทาง'}, {k:'เปิดใช้งาน', l:'เปิดใช้งาน', t:'toggle'}, {k:'รูปภาพ', l:'รูปปก', t:'image', cover:true}],
+            'Banks': [{k:'รหัสธนาคาร', l:'รหัส', r:true}, {k:'ชื่อธนาคาร', l:'ชื่อธนาคาร', highlight:true}, {k:'เปิดใช้งาน', l:'เปิดใช้งาน', t:'toggle'}, {k:'ลิงก์โลโก้', l:'รูปโลโก้', t:'image'}, {k:'วันที่สร้าง', l:'วันที่สร้าง', r:true}, {k:'อัปเดตล่าสุด', l:'แก้ไขล่าสุด', r:true}],
+            'BlockedNumbers': [{k:'รหัสบล็อก', l:'รหัส', r:true}, {k:'รหัสประเภทหวย', l:'ประเภทหวย'}, {k:'ตัวเลข', l:'เลขอั้น', highlight:true}, {k:'ประเภทการแทง', l:'รูปแบบ'}, {k:'สถานะ (BLOCK/HALF)', l:'สถานะ', t:'select', o:['BLOCK','HALF']}, {k:'ราคาจ่ายใหม่/ยอดสูงสุด', l:'ราคา/ยอดรับ'}, {k:'วันที่สร้าง', l:'วันที่สร้าง', r:true}, {k:'อัปเดตล่าสุด', l:'แก้ไขล่าสุด', r:true}],
+            'PayoutRates': [{k:'รหัส', l:'รหัส', r:true}, {k:'ประเภทการแทง', l:'ประเภท', highlight:true}, {k:'อัตราจ่าย', l:'อัตราจ่าย', t:'number'}, {k:'ประเภทการ์ด', l:'ชนิดการ์ด', t:'select', o:['normal','special']}, {k:'ลำดับ', l:'ลำดับ', t:'number'}, {k:'เปิดใช้งาน', l:'เปิดใช้งาน', t:'toggle'}],
+            'Admins': [{k:'รหัสแอดมิน', l:'รหัส', r:true}, {k:'ชื่อผู้ใช้', l:'Username', highlight:true}, {k:'รหัสผ่าน', l:'Password'}, {k:'ชื่อ-สกุล', l:'ชื่อเล่น'}, {k:'ระดับ', l:'ระดับ', t:'select', o:['Super Admin','Admin']}, {k:'วันที่สร้าง', l:'วันที่สร้าง', r:true}, {k:'อัปเดตล่าสุด', l:'แก้ไขล่าสุด', r:true}],
+            'Settings': [{k:'คีย์', l:'Key', r:true}, {k:'ค่า', l:'ค่า', t:'textarea'}, {k:'คำอธิบาย', l:'คำอธิบาย'}, {k:'อัปเดตล่าสุด', l:'แก้ไขล่าสุด', r:true}],
+            'UIText': [{k:'คีย์', l:'Key', r:true}, {k:'ค่า', l:'ข้อความ', t:'textarea'}, {k:'คำอธิบาย', l:'ตำแหน่ง'}]
+        };
+
+        function openModal(sheetKey, id = null) {
+            const schema = SCHEMAS[sheetKey] || [];
+            const idKey = schema[0].k;
+            let data = {};
+            if(id && allData.CACHE[sheetKey]) data = allData.CACHE[sheetKey].find(r => r[idKey] == id) || {};
+            document.getElementById('modal-title').innerText = id ? `แก้ไขข้อมูล (${translateTitle(sheetKey)})` : `เพิ่มข้อมูลใหม่ (${translateTitle(sheetKey)})`;
+            document.getElementById('modal-id-display').innerText = id ? `ID: ${id}` : 'AUTO GEN ID';
+            document.getElementById('dynamic-id').value = id || '';
+            
+            const txDiv = document.getElementById('transaction-actions'); 
+            const btnSave = document.getElementById('btn-save-form');
+            if(sheetKey === 'Transactions' && data['สถานะ'] === 'pending') { 
+                txDiv.classList.remove('hidden'); 
+                btnSave.classList.add('hidden'); 
+            } else { 
+                txDiv.classList.add('hidden'); 
+                btnSave.classList.remove('hidden'); 
+            }
+
+            document.getElementById('dynamic-fields').innerHTML = schema.map(col => {
+                if(col.r) return ''; const val = data[col.k] || ''; const isImage = col.t === 'image'; const colSpan = isImage ? 'col-span-1 md:col-span-2' : 'col-span-1';
+                let inputHtml = '';
+                if(col.t === 'toggle') { const isOn = (val === 'active' || val === true || val === 'TRUE'); inputHtml = `<input type="hidden" name="${col.k}" id="input-${col.k}" value="${isOn?(sheetKey==='Users'?'active':'TRUE'):(sheetKey==='Users'?'banned':'FALSE')}"><div class="flex gap-2"><button type="button" class="btn-option flex-1 py-2 rounded-lg ${isOn?'selected':''}" onclick="setToggle('${col.k}',true,this)">เปิด</button><button type="button" class="btn-option flex-1 py-2 rounded-lg ${!isOn?'selected':''}" onclick="setToggle('${col.k}',false,this)">ปิด</button></div>`; }
+                else if(col.t === 'select' || col.t === 'bank_user') { 
+                    const options = col.o || [];
+                    inputHtml = `<input type="hidden" name="${col.k}" id="input-${col.k}" value="${val}"><div class="flex flex-wrap gap-2">${options.map(opt => `<button type="button" class="btn-option px-3 py-1.5 rounded-lg text-xs ${val===opt?'selected':''}" onclick="setSelect('${col.k}','${opt}',this)">${opt}</button>`).join('')}</div>`; 
+                }
+                else if(col.t === 'textarea') { inputHtml = `<textarea name="${col.k}" rows="3" class="w-full px-3 py-2 border rounded-lg outline-none">${val}</textarea>`; }
+                else { const handler = isImage ? `oninput="document.getElementById('prev-${col.k}').src=this.value"` : ''; inputHtml = `<input type="text" name="${col.k}" value="${val}" class="w-full px-3 py-2 border rounded-lg outline-none" placeholder="${col.l}" ${handler}>`; }
+                return `<div class="${colSpan}"><label class="block text-xs font-bold text-gray-500 mb-1.5">${col.l}</label>${inputHtml}${isImage ? `<div class="mt-2 h-32 bg-gray-100 rounded border flex items-center justify-center overflow-hidden"><img id="prev-${col.k}" src="${val}" class="max-h-full"></div>` : ''}</div>`;
+            }).join('');
+            document.getElementById('dynamic-modal').classList.remove('hidden');
+        }
+
+        function setToggle(k, isOn, btn) { document.getElementById(`input-${k}`).value = isOn ? (currentSheet==='Users'?'active':'TRUE') : (currentSheet==='Users'?'banned':'FALSE'); Array.from(btn.parentElement.children).forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }
+        function setSelect(k, val, btn) { document.getElementById(`input-${k}`).value = val; Array.from(btn.parentElement.children).forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }
+        function filterGenericTable() { const t=document.getElementById('global-search').value.toLowerCase(); document.querySelectorAll(document.getElementById('card-view-container').className !== 'hidden' ? '.card-item' : (document.getElementById('list-container').className !== 'hidden' ? '.list-row' : '.data-table tbody tr')).forEach(el => el.style.display = el.innerText.toLowerCase().includes(t) ? '' : 'none'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        
+        // --- REAL-TIME ACTIONS ---
+        function submitForm() { 
+            const form = document.getElementById('dynamic-form'); 
+            const data = Object.fromEntries(new FormData(form).entries()); 
+            const idKey = SCHEMAS[currentSheet][0].k; 
+            data[idKey] = document.getElementById('dynamic-id').value; 
+            
+            Swal.fire({title: 'Saving...', didOpen: () => Swal.showLoading()}); 
+            callAPI('saveAdminRecord', {sheetName: currentSheet, data: JSON.stringify(data)}, (res) => { 
+                if(res.success) { 
+                    Swal.fire('Saved!', '', 'success'); 
+                    closeModal('dynamic-modal'); 
+                    loadGenericTable(currentSheet); 
+                    loadDashboardData(); // Real-time update stats
+                } else Swal.fire('Error', res.error, 'error'); 
+            }); 
+        }
+        
+        function handleTransactionAction(s) { 
+            Swal.fire({
+                title: s === 'completed' ? 'อนุมัติยอดใช่ไหม?' : 'ปฏิเสธรายการใช่ไหม?', 
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: s === 'completed' ? '#10b981' : '#ef4444'
+            }).then((r) => { 
+                if(r.isConfirmed) {
+                    Swal.fire({title: 'Processing...', didOpen: () => Swal.showLoading()});
+                    callAPI('processTransaction', {
+                        id: document.getElementById('dynamic-id').value, 
+                        status: s, 
+                        adminName: 'Admin'
+                    }, (res) => { 
+                        if(res.success) { 
+                            closeModal('dynamic-modal'); 
+                            loadGenericTable('Transactions'); 
+                            loadDashboardData(); // Real-time update stats/feed/badges
+                            Swal.fire('สำเร็จ','ดำเนินการเรียบร้อยแล้ว','success'); 
+                        } else {
+                            Swal.fire('Error', res.error, 'error');
+                        }
+                    }); 
+                }
+            }); 
+        }
+
+        function deleteItem(s, id) { 
+            Swal.fire({title:'Delete?', showCancelButton:true, confirmButtonColor:'#ef4444'}).then((r)=>{ 
+                if(r.isConfirmed) {
+                    callAPI('deleteAdminRecord',{sheetName:s,id:id},()=>{ 
+                        Swal.fire('Deleted','','success'); 
+                        loadGenericTable(s); 
+                        loadDashboardData(); // Real-time update
+                    }); 
+                }
+            }); 
+        }
+        
+        function openLightbox(url) { document.getElementById('lightbox-img').src=url; document.getElementById('lightbox').classList.remove('hidden'); }
+        function callAPI(a,p,cb) { const u=new URL(APPS_SCRIPT_URL); u.searchParams.append('action',a); Object.keys(p).forEach(k=>u.searchParams.append(k,p[k])); const s=document.createElement('script'); const c='cb'+Date.now(); window[c]=(r)=>{delete window[c]; document.body.removeChild(s); cb(r);}; u.searchParams.append('callback',c); s.src=u.toString(); document.body.appendChild(s); }
+        function formatNumber(n) { return Number(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}); }
+        function startClock() { setInterval(() => { const n=new Date(); document.getElementById('live-clock').innerText=n.toLocaleTimeString('en-GB'); document.getElementById('live-date').innerText=n.toLocaleDateString('en-GB'); }, 1000); }
+        function initCharts() { const ctx1 = document.getElementById('dashboardChart'); if(ctx1) charts.main = new Chart(ctx1, {type:'bar', data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], datasets:[{label:'Deposit', data:[0,0,0,0,0,0,0], backgroundColor:'#144026', borderRadius:6},{label:'Withdraw', data:[0,0,0,0,0,0,0], backgroundColor:'#E5E7EB', borderRadius:6}]}, options:{responsive:true, maintainAspectRatio:false, scales:{x:{grid:{display:false}}, y:{display:false}}}}); const ctx2 = document.getElementById('progressChart'); if(ctx2) charts.progress = new Chart(ctx2, {type:'doughnut', data:{labels:['Reached', 'Remaining'], datasets:[{data:[0, 100], backgroundColor:['#144026', '#E5E7EB'], borderWidth:0}]}, options:{cutout:'80%', plugins:{legend:{display:false}}}}); }
+        function loadWebConfig() { callAPI('getUITexts', {}, (res) => { if(res.success) { const d = res.data; const form = document.getElementById('web-config-form'); Object.keys(d).forEach(key => { const input = form.querySelector(`[name="${key}"]`); if(input) { if(input.type === 'checkbox') input.checked = (d[key] === 'true' || d[key] === true); else input.value = d[key]; } }); } }); }
+        function saveWebConfig() { const form = document.getElementById('web-config-form'); const data = {}; form.querySelectorAll('input, textarea').forEach(el => { if(el.name) { if(el.type === 'checkbox') data[el.name] = el.checked; else data[el.name] = el.value; } }); Swal.fire({title: 'Saving...', didOpen: () => Swal.showLoading()}); callAPI('saveWebSettings', { data: JSON.stringify(data) }, (res) => { if(res.success) Swal.fire('Saved!', 'บันทึกการตั้งค่าเรียบร้อย', 'success'); else Swal.fire('Error', res.error, 'error'); }); }
+    </script>
+</body>
+</html>
