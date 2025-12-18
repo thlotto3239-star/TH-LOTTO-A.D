@@ -9,8 +9,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" /> 
     
-    <!-- Fonts: Kanit & Prompt -->
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600&family=Prompt:wght@300;400;500&display=swap" rel="stylesheet" />
+    <!-- Fonts: Kanit (Headings/Numbers) + Prompt (Content) -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Prompt:wght@200;300;400;500&display=swap" rel="stylesheet" />
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -21,8 +21,8 @@
             theme: { 
                 extend: { 
                     fontFamily: { 
-                        sans: ['Prompt', 'sans-serif'],
-                        heading: ['Kanit', 'sans-serif']
+                        kanit: ['Kanit', 'sans-serif'], 
+                        prompt: ['Prompt', 'sans-serif'] 
                     }, 
                     colors: { 
                         brand: { 
@@ -41,39 +41,48 @@
     </script>
 
     <style>
+        /* Base Styles */
         body { background-color: #F5F6FA; color: #1f2937; font-family: 'Prompt', sans-serif; font-weight: 300; }
         h1, h2, h3, h4, h5, h6, .font-heading { font-family: 'Kanit', sans-serif; }
         
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         
+        /* Animations */
         .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .hover-card { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         .hover-card:hover { transform: translateY(-4px); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); }
 
-        .nav-item.active { color: #144026; background-color: transparent; font-weight: 500; position: relative; font-family: 'Kanit', sans-serif; }
+        /* Sidebar */
+        .nav-item { font-family: 'Kanit', sans-serif; font-weight: 400; transition: all 0.2s; }
+        .nav-item.active { color: #144026; background-color: transparent; font-weight: 500; position: relative; }
         .nav-item.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 24px; width: 4px; background: #144026; border-radius: 0 4px 4px 0; }
         
         #sidebar-overlay { transition: opacity 0.3s; }
         #sidebar { transition: transform 0.3s ease-in-out; }
         .sidebar-open { transform: translateX(0) !important; }
         
+        /* Inputs & Buttons */
         .toggle-checkbox:checked { right: 0; border-color: #3b82f6; }
         .toggle-checkbox:checked + .toggle-label { background-color: #3b82f6; }
         
-        .btn-option { transition: all 0.2s; border: 1px solid #e5e7eb; background: white; color: #4b5563; font-weight: 500; font-size: 0.8rem; }
+        .btn-option { transition: all 0.2s; border: 1px solid #e5e7eb; background: white; color: #4b5563; font-family: 'Kanit', sans-serif; font-weight: 500; font-size: 0.8rem; }
         .btn-option:hover { background: #f9fafb; border-color: #d1d5db; }
         .btn-option.selected { background: #144026; color: white; border-color: #144026; box-shadow: 0 4px 10px rgba(20, 64, 38, 0.2); }
-        .btn-option[data-value="true"].selected, .btn-option[data-value="active"].selected { background: #10b981; border-color: #10b981; }
-        .btn-option[data-value="false"].selected, .btn-option[data-value="banned"].selected { background: #ef4444; border-color: #ef4444; }
-
+        
         .search-pill-container { background-color: white; border-radius: 9999px; padding: 0.5rem 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #f3f4f6; display: flex; align-items: center; width: 100%; max-width: 400px; transition: all 0.2s; }
         .search-pill-container:focus-within { box-shadow: 0 4px 12px rgba(26, 126, 42, 0.08); border-color: #144026; }
-        .search-pill-icon { color: #9ca3af; font-size: 1rem; margin-right: 0.75rem; }
-        .search-pill-input { border: none; outline: none; width: 100%; font-size: 0.9rem; color: #4b5563; background: transparent; font-weight: 300; }
+        .search-pill-input { border: none; outline: none; width: 100%; font-size: 0.9rem; color: #4b5563; background: transparent; font-family: 'Prompt', sans-serif; font-weight: 300; }
+        
+        /* Status Pills (Capsule) */
+        .status-pill { border-radius: 9999px; padding: 4px 12px; font-family: 'Kanit', sans-serif; font-weight: 500; font-size: 0.75rem; text-transform: capitalize; display: inline-flex; align-items: center; justify-content: center; min-width: 80px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .status-pill.success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; } 
+        .status-pill.pending { background-color: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; } 
+        .status-pill.danger { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
         
         /* Card View */
         .card-item { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid #f3f4f6; transition: transform 0.2s; display: flex; flex-direction: column; }
@@ -89,32 +98,15 @@
         .modal-cover-img { width: 100%; height: 100%; object-fit: contain; backdrop-filter: blur(0px); padding: 10px; }
         .modal-cover-bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: blur(30px); opacity: 0.3; }
 
-        /* List Row Style (for Transactions) */
-        .list-row-container {
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-            border: 1px solid #f3f4f6;
-            overflow: hidden;
-        }
-        .list-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid #f3f4f6;
-            transition: all 0.15s;
-            flex-wrap: nowrap;
-            gap: 1rem;
-            overflow-x: auto;
-        }
+        /* List & Table */
+        .list-row-container { background: white; border-radius: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); border: 1px solid #f3f4f6; overflow: hidden; }
+        .list-row { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid #f3f4f6; transition: all 0.15s; flex-wrap: nowrap; gap: 1rem; overflow-x: auto; }
         .list-row:last-child { border-bottom: none; }
         .list-row:hover { background-color: #f9fafb; }
         .list-col { white-space: nowrap; }
 
-        /* Full Table Styles - หัวข้อตารางใช้ Kanit */
         .data-table th { font-family: 'Kanit', sans-serif; font-size: 0.75rem; font-weight: 500; color: #6b7280; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; white-space: nowrap; letter-spacing: 0.02em; padding: 1rem; }
-        .data-table td { padding: 1rem; vertical-align: middle; border-bottom: 1px solid #f3f4f6; font-size: 0.9rem; color: #374151; font-weight: 300; }
+        .data-table td { padding: 1rem; vertical-align: middle; border-bottom: 1px solid #f3f4f6; font-size: 0.9rem; color: #374151; font-family: 'Prompt', sans-serif; font-weight: 300; }
         .data-table tr:hover { background-color: #f9fafb; }
     </style>
 </head>
@@ -149,7 +141,7 @@
             <div class="px-4 mt-6 mb-2 text-xs font-heading font-bold text-gray-400 uppercase tracking-wider">การเงิน & สมาชิก</div>
             <a onclick="showSection('Transactions', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all relative">
                 <i class="fas fa-wallet w-5 text-center"></i><span>รายการฝาก-ถอน</span>
-                <span id="badge-tx" class="absolute right-3 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden font-heading font-bold">0</span>
+                <span id="badge-tx" class="absolute right-3 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden font-heading font-bold shadow-sm">0</span>
             </a>
             <a onclick="showSection('Users', this)" class="nav-item flex items-center gap-4 px-4 py-3.5 rounded-xl text-gray-500 hover:text-brand-dark hover:bg-green-50/50 cursor-pointer transition-all">
                 <i class="fas fa-users w-5 text-center"></i><span>สมาชิกทั้งหมด</span>
@@ -348,6 +340,7 @@
                             <tbody id="table-body"></tbody>
                         </table>
                     </div>
+                    <!-- FIXED: Enforce Grid Layout for Card View -->
                     <div id="card-view-container" class="hidden"></div>
 
                     <div class="flex justify-between items-center text-xs text-gray-400 px-4 font-light">
@@ -379,7 +372,7 @@
             <div id="modal-cover-container" class="modal-cover-container">
                 <div class="modal-cover-bg" id="modal-cover-bg"></div>
                 <img id="modal-cover" src="" class="modal-cover-img relative z-10 mx-auto" onclick="openLightbox(this.src)" style="cursor: zoom-in;">
-                <div class="absolute top-4 right-4 z-20"><span id="modal-status-badge" class="px-3 py-1 rounded-full text-xs font-medium bg-white/90 text-gray-800 shadow-sm font-heading">STATUS</span></div>
+                <div class="absolute top-4 right-4 z-20"><span id="modal-status-badge" class="status-pill bg-white/90 text-gray-800 shadow-sm font-heading">STATUS</span></div>
             </div>
             <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-start bg-white relative z-10">
                 <div>
@@ -414,7 +407,7 @@
     <div id="lightbox" class="fixed inset-0 z-[70] bg-black/95 hidden flex items-center justify-center p-4 backdrop-blur-md cursor-zoom-out fade-in" onclick="this.classList.add('hidden')"><img id="lightbox-img" src="" class="max-w-full max-h-[95vh] rounded-lg shadow-2xl border border-white/20"></div>
 
     <script>
-        // ⚠️ อย่าลืมแก้ URL ด้านล่างนี้เป็น URL ของ Web App คุณ
+        // ⚠️ แก้ URL เป็น Web App ของคุณ
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbySn2wOuHTga7lR-zFRZ4P6RXLM551m3uU304pdwsiidHgQgcKL0ptmU-0gBWd3DM-I-w/exec';
 
         let allData = { CACHE: {}, BANKS: [] };
@@ -503,7 +496,7 @@
             return `<span class="truncate max-w-[200px] block font-light" title="${strVal}">${strVal}</span>`;
         }
 
-        // --- DASHBOARD LOGIC ---
+        // --- DASHBOARD LOGIC (Updated to Merge Data) ---
         function loadDashboardData() {
             callAPI('getAdminStats', {}, (res) => {
                 if(res.success) {
@@ -532,17 +525,23 @@
                 }
             });
 
-            // *** Live Feed & Notification Logic ***
-            if(!allData.CACHE['Users']) {
-                callAPI('getAdminTableData', {sheetName: 'Users'}, (res) => {
-                    if(res.success) {
-                        allData.CACHE['Users'] = res.data; 
-                        fetchLiveFeed(); 
-                    }
-                });
-            } else {
-                fetchLiveFeed(); 
-            }
+            // *** LIVE FEED LOGIC: Pre-fetch LotteryTypes & Bets to merge ***
+            const p1 = new Promise(r => {
+                if(!allData.CACHE['Users']) callAPI('getAdminTableData', {sheetName: 'Users'}, (res) => { if(res.success) allData.CACHE['Users'] = res.data; r(); });
+                else r();
+            });
+            const p2 = new Promise(r => {
+                if(!allData.CACHE['LotteryTypes']) callAPI('getAdminTableData', {sheetName: 'LotteryTypes'}, (res) => { if(res.success) allData.CACHE['LotteryTypes'] = res.data; r(); });
+                else r();
+            });
+            const p3 = new Promise(r => {
+                callAPI('getAdminTableData', {sheetName: 'Bets'}, (res) => { if(res.success) allData.CACHE['Bets'] = res.data; r(); });
+            });
+
+            // Parallel loading for FAST performance
+            Promise.all([p1, p2, p3]).then(() => {
+                fetchLiveFeed(); // Now we have all data needed to merge
+            });
 
             callAPI('getAdvancedStats', {}, (res) => {
                 if(res.success) renderTopWinners(res.data.topWinners);
@@ -574,12 +573,30 @@
                         }
                     }
 
-                    renderLiveFeed(res.data.feed);
+                    // *** MERGE LOGIC START ***
+                    const transactions = (res.data.feed || []).map(t => ({
+                        ...t, 
+                        _type: 'tx', 
+                        _date: new Date(t['วันที่สร้างรายการ'])
+                    }));
+
+                    const bets = (allData.CACHE['Bets'] || []).map(b => ({
+                        ...b, 
+                        _type: 'bet', 
+                        _date: new Date(b['วันที่แทง']),
+                        'จำนวนเงิน': b['จำนวนเงิน']
+                    }));
+
+                    // Combine and Sort Descending
+                    const mergedFeed = [...transactions, ...bets].sort((a, b) => b._date - a._date);
+                    // *** MERGE LOGIC END ***
+
+                    renderLiveFeed(mergedFeed);
                 }
             });
         }
 
-        // --- UPDATED LIVE FEED FUNCTION (ตามคำสั่งล่าสุด) ---
+        // --- UPDATED LIVE FEED RENDER (With Merged Data) ---
         function renderLiveFeed(feed) {
             const list = document.getElementById('live-feed-list');
             if(!feed || feed.length === 0) { 
@@ -587,69 +604,89 @@
                 return; 
             }
             
-            // 1. Limit to 10 items
+            // Limit to 10 items
             const displayFeed = feed.slice(0, 10);
             
             const users = allData.CACHE['Users'] || []; 
+            const lotteries = allData.CACHE['LotteryTypes'] || [];
+
             list.innerHTML = displayFeed.map(item => {
-                const type = (item['ประเภท'] || 'deposit').toLowerCase();
-                const amount = item['จำนวนเงิน'] || 0;
-                const status = item['สถานะ'] || 'pending';
-                const userId = item['รหัสผู้ใช้'];
-                const rawDate = item['วันที่สร้างรายการ'] || '';
-                const detail = item['รายละเอียด'] || ''; // Column G
-
-                // Lookup User Bank
-                let bankName = 'Banking'; 
-                let foundUser = users.find(u => u['รหัสผู้ใช้'] === userId);
-                if (foundUser && foundUser['ชื่อธนาคาร']) {
-                    bankName = foundUser['ชื่อธนาคาร'];
-                }
-
-                // Wording & Styling Logic
+                const isBet = item._type === 'bet';
+                let logoUrl = BANK_ICONS['default'];
+                let titleText = '';
                 let badgeText = '';
                 let badgeClass = '';
                 let amountColor = '';
                 let amountPrefix = '';
                 let iconClass = '';
                 let iconColor = '';
-                
-                if (type === 'deposit') {
-                    badgeText = 'ฝากเงิน';
-                    badgeClass = 'bg-green-100 text-green-700 border-green-200';
-                    amountColor = 'text-green-600';
-                    amountPrefix = '+';
-                    iconClass = 'fa-arrow-down';
-                    iconColor = 'bg-green-500';
-                } else if (type === 'withdraw') {
-                    badgeText = 'ถอนเงิน';
-                    badgeClass = 'bg-red-100 text-red-700 border-red-200';
-                    amountColor = 'text-red-600';
-                    amountPrefix = '';
-                    iconClass = 'fa-arrow-up';
-                    iconColor = 'bg-red-500';
-                } else if (type === 'promotion') {
-                    badgeText = 'ฝากรับโปรโมชั่น';
-                    badgeClass = 'bg-orange-500 text-white border-orange-600';
-                    amountColor = 'text-green-600';
-                    amountPrefix = '+';
-                    iconClass = 'fa-gift';
-                    iconColor = 'bg-orange-500';
-                } else {
-                    // Bet, Pay, etc.
+                let status = item['สถานะ'] || item['สถานะโพย'] || 'pending';
+                let rawDate = isBet ? item['วันที่แทง'] : item['วันที่สร้างรายการ'];
+                let amount = item['จำนวนเงิน'] || 0;
+
+                if (isBet) {
+                    // --- LOGIC FOR BETS ---
+                    const lottoCode = item['รหัสประเภทหวย'];
+                    const lottoObj = lotteries.find(l => l['รหัสประเภทหวย'] === lottoCode);
+                    
+                    // Logo from LotteryTypes
+                    if(lottoObj && lottoObj['ลิงก์รูปภาพ']) logoUrl = lottoObj['ลิงก์รูปภาพ'];
+                    
+                    const lottoName = lottoObj ? (lottoObj['ชื่อเต็ม'] || lottoObj['ชื่อย่อ']) : lottoCode;
+                    const betType = item['ประเภทการแทง'] || '';
+                    const betNumber = item['ตัวเลข'] || '-'; 
+                    
+                    // Title: "Name (Type) : Number"
+                    titleText = `${lottoName} (${betType}) : ${betNumber}`;
+
                     badgeText = 'ชำระค่าโพย';
                     badgeClass = 'bg-orange-100 text-orange-700 border-orange-200';
-                    amountColor = 'text-orange-600';
-                    amountPrefix = '';
-                    iconClass = 'fa-file-invoice'; // Receipt icon
+                    amountColor = 'text-orange-600'; 
+                    amountPrefix = '-';
+                    iconClass = 'fa-file-invoice'; // Bill Icon
                     iconColor = 'bg-orange-500';
+
+                } else {
+                    // --- LOGIC FOR TRANSACTIONS ---
+                    const type = (item['ประเภท'] || 'deposit').toLowerCase();
+                    const userId = item['รหัสผู้ใช้'];
+                    const detail = item['รายละเอียด'] || '';
+
+                    let bankName = 'Banking'; 
+                    let foundUser = users.find(u => u['รหัสผู้ใช้'] === userId);
+                    if (foundUser && foundUser['ชื่อธนาคาร']) bankName = foundUser['ชื่อธนาคาร'];
+                    
+                    // Logo from Bank
+                    logoUrl = getBankLogo(bankName);
+
+                    // Title
+                    titleText = (detail && detail !== 'Normal' && !detail.startsWith('Time:')) ? detail : bankName;
+
+                    if (type === 'deposit') {
+                        badgeText = 'ฝากเงิน';
+                        badgeClass = 'bg-green-100 text-green-700 border-green-200';
+                        amountColor = 'text-green-600';
+                        amountPrefix = '+';
+                        iconClass = 'fa-arrow-down';
+                        iconColor = 'bg-green-500';
+                    } else if (type === 'withdraw') {
+                        badgeText = 'ถอนเงิน';
+                        badgeClass = 'bg-red-100 text-red-700 border-red-200';
+                        amountColor = 'text-red-600';
+                        amountPrefix = '-';
+                        iconClass = 'fa-arrow-up';
+                        iconColor = 'bg-red-500';
+                    } else if (type === 'promotion') {
+                        badgeText = 'ฝากรับโปรโมชั่น';
+                        badgeClass = 'bg-orange-500 text-white border-orange-600';
+                        amountColor = 'text-green-600';
+                        amountPrefix = '+';
+                        iconClass = 'fa-gift';
+                        iconColor = 'bg-orange-500';
+                    }
                 }
 
-                // Subtitle Logic: Show Detail from Column G (e.g. Lottery Name) or fallback to Bank
-                const titleText = (detail && detail !== 'Normal') ? detail : bankName;
-                const logo = getBankLogo(bankName);
-
-                // Time Formatting
+                // Time Format AM/PM
                 let timeDisplay = '00:00';
                 if(rawDate) {
                     try {
@@ -664,15 +701,14 @@
                 <div class="flex items-center justify-between p-3 hover:bg-gray-50 transition rounded-xl border-b border-gray-50 last:border-0">
                     <div class="flex items-center gap-4">
                         <div class="relative shrink-0">
-                            <img src="${logo}" class="w-10 h-10 rounded-xl shadow-sm object-cover border border-gray-100 p-1 bg-white" onerror="this.src='${BANK_ICONS['default']}'">
+                            <img src="${logoUrl}" class="w-10 h-10 rounded-xl shadow-sm object-cover border border-gray-100 p-1 bg-white" onerror="this.src='${BANK_ICONS['default']}'">
                             <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border border-white flex items-center justify-center text-[8px] text-white ${iconColor}">
                                 <i class="fas ${iconClass}"></i>
                             </div>
                         </div>
                         <div class="min-w-0">
-                            <!-- Main Title (Deposit from...) -->
                             <p class="font-heading text-sm font-bold text-gray-800 truncate leading-tight mb-1">
-                                ${type==='deposit' ? 'Deposit via' : (type==='withdraw'?'Withdraw to':'Payment for')} ${titleText}
+                                ${titleText}
                             </p>
                             <div class="flex items-center gap-2">
                                 <span class="text-[10px] text-gray-400 font-light flex items-center gap-1">
@@ -734,6 +770,14 @@
             document.getElementById('table-container').classList.toggle('hidden', isCardView || isListView);
             document.getElementById('list-container').classList.toggle('hidden', !isListView);
             document.getElementById('card-view-container').classList.toggle('hidden', !isCardView);
+            
+            // *** CRITICAL UPDATE: Ensure Grid Layout for Card View ***
+            const cardContainer = document.getElementById('card-view-container');
+            if(isCardView) {
+                cardContainer.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6';
+            } else {
+                cardContainer.className = 'hidden';
+            }
             
             document.getElementById('table-body').innerHTML = '<tr><td colspan="100%" class="p-10 text-center text-gray-400 font-light">Loading Table...</td></tr>';
             document.getElementById('list-container').innerHTML = '<div class="text-center py-10 text-gray-400 font-light">Loading List...</div>';
@@ -805,7 +849,6 @@
                     const slipUrl = row['ลิงก์สลิป']; 
                     let slipDisplay = slipUrl ? `<img src="${slipUrl}" class="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm cursor-zoom-in hover:scale-110 transition-transform" onclick="event.stopPropagation(); openLightbox('${slipUrl}')" title="ดูสลิป">` : `<div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs"><i class="fas fa-receipt"></i></div>`;
                     
-                    // Capsule Status
                     const statusClass = row['สถานะ'] === 'completed' ? 'bg-green-100 text-green-700' : (row['สถานะ'] === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700');
                     const amountColor = isDep ? 'text-green-600' : 'text-red-600';
 
@@ -908,7 +951,7 @@
         function filterGenericTable() { const t=document.getElementById('global-search').value.toLowerCase(); document.querySelectorAll(document.getElementById('card-view-container').className !== 'hidden' ? '.card-item' : (document.getElementById('list-container').className !== 'hidden' ? '.list-row' : '.data-table tbody tr')).forEach(el => el.style.display = el.innerText.toLowerCase().includes(t) ? '' : 'none'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         
-        // --- REAL-TIME ACTIONS (ตามคำสั่ง: อัปเดตทันที) ---
+        // --- REAL-TIME ACTIONS (Optimistic UI - UPDATED) ---
         function submitForm() { 
             const form = document.getElementById('dynamic-form'); 
             const data = Object.fromEntries(new FormData(form).entries()); 
@@ -953,7 +996,7 @@
                 if(r.isConfirmed) {
                     Swal.fire({title: 'Processing...', didOpen: () => Swal.showLoading()});
                     
-                    // --- REAL-TIME UI UPDATE ---
+                    // --- OPTIMISTIC UI UPDATE START ---
                     if(allData.CACHE['Transactions']) {
                         const row = allData.CACHE['Transactions'].find(r => r['รหัสธุรกรรม'] == targetId);
                         if(row) {
@@ -962,32 +1005,52 @@
                                 row['ดำเนินการโดย'] = 'Admin';
                                 row['วันที่ดำเนินการ'] = new Date().toLocaleString('en-GB');
                                 
-                                // คำนวณยอดเงินบนหน้าจอทันที (ไม่ต้องรอ Server)
+                                // UPDATE BALANCES INSTANTLY
                                 const amount = Number(row['จำนวนเงิน']) || 0;
                                 const isDep = row['ประเภท'] === 'deposit';
                                 const statEl = document.getElementById(isDep ? 'stat-dep' : 'stat-wit');
+                                const balanceEl = document.getElementById('stat-balance');
+
                                 if(statEl) {
                                     const currentVal = parseFloat(statEl.innerText.replace(/,/g, '')) || 0;
                                     statEl.innerText = formatNumber(currentVal + amount);
                                 }
+                                
+                                if(balanceEl) {
+                                    let currentBal = parseFloat(balanceEl.innerText.replace(/[^\d.-]/g, '')) || 0;
+                                    if(isDep) currentBal += amount;
+                                    else currentBal -= amount;
+                                    balanceEl.innerText = '฿' + formatNumber(currentBal);
+                                }
                             }
                             
-                            // ลดจำนวนแจ้งเตือนทันที
+                            // REDUCE NOTIFICATION BADGE INSTANTLY
                             const pendingEl = document.getElementById('stat-pending');
                             if(pendingEl) {
                                 const currentPending = parseInt(pendingEl.innerText) || 0;
                                 const newPending = Math.max(0, currentPending - 1);
                                 pendingEl.innerText = newPending;
+                                
                                 const badgeTx = document.getElementById('badge-tx');
                                 if(badgeTx) { badgeTx.innerText = newPending; badgeTx.classList.toggle('hidden', newPending === 0); }
+                                
                                 const badgeHeader = document.getElementById('noti-badge-header');
-                                if(badgeHeader) { badgeHeader.innerText = newPending; if(newPending===0) badgeHeader.classList.add('hidden'); }
+                                if(badgeHeader) { 
+                                    badgeHeader.innerText = newPending; 
+                                    if(newPending > 0) {
+                                        badgeHeader.classList.remove('hidden'); 
+                                        badgeHeader.classList.add('flex');
+                                    } else {
+                                        badgeHeader.classList.add('hidden'); 
+                                        badgeHeader.classList.remove('flex');
+                                    }
+                                }
                             }
                             processDataRender('Transactions', allData.CACHE['Transactions']);
                         }
                     }
+                    // --- OPTIMISTIC UI UPDATE END ---
 
-                    // ส่งข้อมูลไปหลังบ้าน
                     callAPI('processTransaction', {
                         id: targetId, 
                         status: s, 
