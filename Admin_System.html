@@ -9,7 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" /> 
     
-    <!-- Fonts: Kanit (Headings/Numbers) + Prompt (Content) -->
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Prompt:wght@200;300;400;500&display=swap" rel="stylesheet" />
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -41,50 +41,33 @@
     </script>
 
     <style>
-        /* Base Styles */
         body { background-color: #F5F6FA; color: #1f2937; font-family: 'Prompt', sans-serif; font-weight: 300; }
         h1, h2, h3, h4, h5, h6, .font-heading { font-family: 'Kanit', sans-serif; }
-        
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        
-        /* Animations */
         .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
         .hover-card { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         .hover-card:hover { transform: translateY(-4px); box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1); }
-
-        /* Sidebar */
         .nav-item { font-family: 'Kanit', sans-serif; font-weight: 400; transition: all 0.2s; }
         .nav-item.active { color: #144026; background-color: transparent; font-weight: 500; position: relative; }
         .nav-item.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 24px; width: 4px; background: #144026; border-radius: 0 4px 4px 0; }
-        
         #sidebar-overlay { transition: opacity 0.3s; }
         #sidebar { transition: transform 0.3s ease-in-out; }
         .sidebar-open { transform: translateX(0) !important; }
-        
-        /* Inputs & Buttons */
         .toggle-checkbox:checked { right: 0; border-color: #3b82f6; }
         .toggle-checkbox:checked + .toggle-label { background-color: #3b82f6; }
-        
         .btn-option { transition: all 0.2s; border: 1px solid #e5e7eb; background: white; color: #4b5563; font-family: 'Kanit', sans-serif; font-weight: 500; font-size: 0.8rem; }
         .btn-option:hover { background: #f9fafb; border-color: #d1d5db; }
         .btn-option.selected { background: #144026; color: white; border-color: #144026; box-shadow: 0 4px 10px rgba(20, 64, 38, 0.2); }
-        
         .search-pill-container { background-color: white; border-radius: 9999px; padding: 0.5rem 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #f3f4f6; display: flex; align-items: center; width: 100%; max-width: 400px; transition: all 0.2s; }
         .search-pill-container:focus-within { box-shadow: 0 4px 12px rgba(26, 126, 42, 0.08); border-color: #144026; }
         .search-pill-input { border: none; outline: none; width: 100%; font-size: 0.9rem; color: #4b5563; background: transparent; font-family: 'Prompt', sans-serif; font-weight: 300; }
-        
-        /* Status Pills (Capsule) */
         .status-pill { border-radius: 9999px; padding: 4px 12px; font-family: 'Kanit', sans-serif; font-weight: 500; font-size: 0.75rem; text-transform: capitalize; display: inline-flex; align-items: center; justify-content: center; min-width: 80px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .status-pill.success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; } 
         .status-pill.pending { background-color: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; } 
         .status-pill.danger { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-        
-        /* Card View */
         .card-item { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid #f3f4f6; transition: transform 0.2s; display: flex; flex-direction: column; }
         .card-item:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.06); }
         .card-img-wrapper { width: 100%; padding-top: 56.25%; position: relative; background: #f3f4f6; border-bottom: 1px solid #f0f0f0; }
@@ -92,19 +75,15 @@
         .card-body { padding: 1rem; flex: 1; display: flex; flex-direction: column; }
         .card-title { font-family: 'Kanit', sans-serif; font-weight: 500; font-size: 1rem; color: #1f2937; margin-bottom: 0.5rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .card-footer { margin-top: auto; display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid #f3f4f6; }
-        
         .modal-cover-container { width: 100%; height: 280px; overflow: hidden; display: none; position: relative; background-color: #f9fafb; border-bottom: 1px solid #f3f4f6; }
         .modal-cover-container.has-img { display: block; }
         .modal-cover-img { width: 100%; height: 100%; object-fit: contain; backdrop-filter: blur(0px); padding: 10px; }
         .modal-cover-bg { position: absolute; inset: 0; background-size: cover; background-position: center; filter: blur(30px); opacity: 0.3; }
-
-        /* List & Table */
         .list-row-container { background: white; border-radius: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); border: 1px solid #f3f4f6; overflow: hidden; }
         .list-row { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid #f3f4f6; transition: all 0.15s; flex-wrap: nowrap; gap: 1rem; overflow-x: auto; }
         .list-row:last-child { border-bottom: none; }
         .list-row:hover { background-color: #f9fafb; }
         .list-col { white-space: nowrap; }
-
         .data-table th { font-family: 'Kanit', sans-serif; font-size: 0.75rem; font-weight: 500; color: #6b7280; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; white-space: nowrap; letter-spacing: 0.02em; padding: 1rem; }
         .data-table td { padding: 1rem; vertical-align: middle; border-bottom: 1px solid #f3f4f6; font-size: 0.9rem; color: #374151; font-family: 'Prompt', sans-serif; font-weight: 300; }
         .data-table tr:hover { background-color: #f9fafb; }
@@ -112,7 +91,6 @@
 </head>
 <body class="h-screen flex overflow-hidden selection:bg-green-100 selection:text-green-900">
 
-    <!-- Global Loader -->
     <div id="global-loader" class="fixed inset-0 z-[100] bg-white/80 hidden flex flex-col items-center justify-center backdrop-blur-md">
         <div class="relative">
             <div class="w-16 h-16 border-4 border-green-200 border-t-green-800 rounded-full animate-spin"></div>
@@ -120,10 +98,8 @@
         </div>
     </div>
 
-    <!-- Mobile Sidebar Overlay -->
     <div id="sidebar-overlay" class="fixed inset-0 z-40 bg-black/50 hidden lg:hidden" onclick="toggleSidebar()"></div>
 
-    <!-- Sidebar -->
     <aside id="sidebar" class="w-[260px] bg-white flex flex-col h-full border-r border-gray-100 fixed lg:relative z-50 -translate-x-full lg:translate-x-0">
         <div class="h-24 flex items-center gap-3 px-6 shrink-0">
             <img src="https://img2.pic.in.th/pic/TH-LOTTO.md.png" class="w-10 h-10 rounded-full shadow-lg shadow-green-900/10 p-0.5 bg-white object-cover">
@@ -227,7 +203,6 @@
             <div id="section-dashboard" class="section-view fade-in space-y-8">
                 <div><p class="text-gray-400 mt-1 font-light">ภาพรวมระบบและสถิติการใช้งาน</p></div>
                 
-                <!-- Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="bg-brand-dark p-6 rounded-3xl shadow-soft text-white relative overflow-hidden group hover-card">
                         <div class="absolute -right-6 -top-6 w-32 h-32 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-all"></div>
@@ -238,7 +213,6 @@
                         <h3 class="font-heading text-3xl font-bold mb-1 relative z-10" id="stat-balance">฿0</h3>
                         <p class="text-xs text-green-300/70 relative z-10 font-light">System Holdings</p>
                     </div>
-                    
                     <div class="bg-white p-6 rounded-3xl shadow-soft border border-white relative overflow-hidden group hover-card">
                         <div class="flex justify-between items-start mb-4">
                             <span class="font-heading text-gray-500 font-medium text-sm">ยอดฝากวันนี้</span>
@@ -247,7 +221,6 @@
                         <h3 class="font-heading text-3xl font-bold text-green-600 mb-1" id="stat-dep">0</h3>
                         <p class="text-xs text-green-600 bg-green-50 inline-block px-2 py-0.5 rounded-lg font-bold">+ รายรับ</p>
                     </div>
-                    
                     <div class="bg-white p-6 rounded-3xl shadow-soft border border-white relative overflow-hidden group hover-card">
                         <div class="flex justify-between items-start mb-4">
                             <span class="font-heading text-gray-500 font-medium text-sm">ยอดถอนวันนี้</span>
@@ -256,7 +229,6 @@
                         <h3 class="font-heading text-3xl font-bold text-red-600 mb-1" id="stat-wit">0</h3>
                         <p class="text-xs text-red-500 bg-red-50 inline-block px-2 py-0.5 rounded-lg font-bold">- รายจ่าย</p>
                     </div>
-                    
                     <div class="bg-white p-6 rounded-3xl shadow-soft border border-white relative overflow-hidden group hover-card">
                         <div class="flex justify-between items-start mb-4">
                             <span class="font-heading text-gray-500 font-medium text-sm">รอดำเนินการ</span>
@@ -274,7 +246,6 @@
                         </div>
                         <div class="h-[250px] w-full"><canvas id="dashboardChart"></canvas></div>
                     </div>
-                    
                     <div class="bg-white p-6 rounded-3xl shadow-soft border border-white flex flex-col">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="font-heading font-bold text-lg text-gray-800">ผู้ถูกรางวัลสูงสุด</h3>
@@ -300,7 +271,6 @@
                             <div class="text-center py-10 text-gray-400 text-sm font-light">Waiting...</div>
                         </div>
                     </div>
-                    
                     <div class="bg-white p-6 rounded-3xl shadow-soft border border-white">
                         <h3 class="font-heading font-bold text-lg text-gray-800 mb-4">Goal Reached</h3>
                         <div class="relative h-[180px] flex items-center justify-center">
@@ -332,7 +302,6 @@
                             </button>
                         </div>
                     </div>
-                    
                     <div id="list-container" class="list-row-container hidden"></div>
                     <div id="table-container" class="overflow-x-auto rounded-xl border border-gray-100 bg-white hidden">
                         <table class="w-full text-left border-collapse data-table">
@@ -340,9 +309,7 @@
                             <tbody id="table-body"></tbody>
                         </table>
                     </div>
-                    <!-- FIXED: Enforce Grid Layout for Card View -->
                     <div id="card-view-container" class="hidden"></div>
-
                     <div class="flex justify-between items-center text-xs text-gray-400 px-4 font-light">
                         <span>จำนวนรายการ: <span id="rows-count" class="font-heading font-medium text-gray-600">0</span> รายการ</span>
                     </div>
@@ -408,13 +375,12 @@
 
     <script>
         // ⚠️ แก้ URL เป็น Web App ของคุณ
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyrXxXWxWeO8trECnmvNHYiHo0lkg0gqkbRzILTjzVkxIJSrdxZoFbeNCyFn9v_2LPn/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuK6l42S6uB3nQFLxC5e0MfVAQ9OMiod_MzkBpeS0gW_g-r3i_BemavV07iPc5q3Onfw/exec';
 
         let allData = { CACHE: {}, BANKS: [] };
         let currentSheet = 'dashboard';
         let charts = {};
 
-        // === CONFIG: BANK ICONS FALLBACK ===
         const BANK_ICONS = {
             'kbank': 'https://raw.githubusercontent.com/guinguin/thai-bank-icons/master/official/kbank.min.png',
             'scb': 'https://raw.githubusercontent.com/guinguin/thai-bank-icons/master/official/scb.min.png',
@@ -428,7 +394,6 @@
             'default': 'https://cdn-icons-png.flaticon.com/512/2830/2830284.png'
         };
 
-        // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
             startClock();
             loadBankLogos(); 
@@ -437,7 +402,6 @@
             setInterval(() => { if(currentSheet==='dashboard') loadDashboardData(); }, 10000); 
         });
 
-        // --- LOAD BANKS FROM SHEET ---
         function loadBankLogos() {
             callAPI('getAdminTableData', {sheetName: 'Banks'}, (res) => {
                 if(res.success) {
@@ -451,10 +415,7 @@
         function getBankLogo(bankName) {
             if (!bankName) return BANK_ICONS['default'];
             if (allData.BANKS && allData.BANKS.length > 0) {
-                const found = allData.BANKS.find(b => 
-                    String(b['ชื่อธนาคาร']).trim() === String(bankName).trim() ||
-                    String(b['รหัสธนาคาร']).trim().toLowerCase() === String(bankName).trim().toLowerCase()
-                );
+                const found = allData.BANKS.find(b => String(b['ชื่อธนาคาร']).trim() === String(bankName).trim() || String(b['รหัสธนาคาร']).trim().toLowerCase() === String(bankName).trim().toLowerCase());
                 if (found && found['ลิงก์โลโก้']) return found['ลิงก์โลโก้'];
             }
             const lowerName = bankName.toLowerCase();
@@ -462,7 +423,6 @@
             return BANK_ICONS['default'];
         }
 
-        // --- RENDER BANK WITH LOGO ---
         function renderBankWithLogo(bankName, accNum) {
             let displayBank = bankName || '';
             let displaySub = accNum || '';
@@ -472,31 +432,17 @@
                 displaySub = parts[1] ? parts[1].trim() : '';
             }
             const logoUrl = getBankLogo(displayBank);
-            return `
-                <div class="flex items-center gap-2 list-col">
-                    <img src="${logoUrl}" class="w-8 h-8 rounded-full shadow-sm object-cover border border-gray-100 p-0.5 bg-white shrink-0" onerror="this.src='${BANK_ICONS['default']}'">
-                    <div class="flex items-center gap-2">
-                        <span class="font-heading font-medium text-gray-700 text-sm whitespace-nowrap">${displayBank}</span>
-                        ${displaySub ? `<span class="text-xs text-gray-500 font-light border-l pl-2 border-gray-300 whitespace-nowrap">${displaySub}</span>` : ''}
-                    </div>
-                </div>
-            `;
+            return `<div class="flex items-center gap-2 list-col"><img src="${logoUrl}" class="w-8 h-8 rounded-full shadow-sm object-cover border border-gray-100 p-0.5 bg-white shrink-0" onerror="this.src='${BANK_ICONS['default']}'"><div class="flex items-center gap-2"><span class="font-heading font-medium text-gray-700 text-sm whitespace-nowrap">${displayBank}</span>${displaySub ? `<span class="text-xs text-gray-500 font-light border-l pl-2 border-gray-300 whitespace-nowrap">${displaySub}</span>` : ''}</div></div>`;
         }
 
-        // --- HELPER FOR GENERIC CELLS ---
         function renderCellContent(val, type) {
             if (!val && val !== 0) return '-';
             const strVal = String(val);
-            if (type === 'image' || strVal.match(/\.(jpeg|jpg|gif|png|webp)($|\?)/i)) {
-                return `<img src="${strVal}" class="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm cursor-zoom-in" onclick="event.stopPropagation(); openLightbox('${strVal}')">`;
-            }
-            if (strVal.startsWith('http://') || strVal.startsWith('https://')) {
-                return `<a href="${strVal}" target="_blank" class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition shadow-sm" onclick="event.stopPropagation();"><i class="fas fa-link"></i></a>`;
-            }
+            if (type === 'image' || strVal.match(/\.(jpeg|jpg|gif|png|webp)($|\?)/i)) { return `<img src="${strVal}" class="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm cursor-zoom-in" onclick="event.stopPropagation(); openLightbox('${strVal}')">`; }
+            if (strVal.startsWith('http://') || strVal.startsWith('https://')) { return `<a href="${strVal}" target="_blank" class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition shadow-sm" onclick="event.stopPropagation();"><i class="fas fa-link"></i></a>`; }
             return `<span class="truncate max-w-[200px] block font-light" title="${strVal}">${strVal}</span>`;
         }
 
-        // --- DASHBOARD LOGIC (Updated to Merge Data) ---
         function loadDashboardData() {
             callAPI('getAdminStats', {}, (res) => {
                 if(res.success) {
@@ -515,7 +461,6 @@
                     }
                 }
             });
-
             callAPI('getDashboardChartData', {}, (res) => {
                 if(res.success && charts.main) {
                     charts.main.data.labels = res.data.trends.labels;
@@ -524,208 +469,68 @@
                     charts.main.update();
                 }
             });
-
-            // *** LIVE FEED LOGIC: Pre-fetch LotteryTypes & Bets to merge ***
-            const p1 = new Promise(r => {
-                if(!allData.CACHE['Users']) callAPI('getAdminTableData', {sheetName: 'Users'}, (res) => { if(res.success) allData.CACHE['Users'] = res.data; r(); });
-                else r();
-            });
-            const p2 = new Promise(r => {
-                if(!allData.CACHE['LotteryTypes']) callAPI('getAdminTableData', {sheetName: 'LotteryTypes'}, (res) => { if(res.success) allData.CACHE['LotteryTypes'] = res.data; r(); });
-                else r();
-            });
-            const p3 = new Promise(r => {
-                callAPI('getAdminTableData', {sheetName: 'Bets'}, (res) => { if(res.success) allData.CACHE['Bets'] = res.data; r(); });
-            });
-
-            // Parallel loading for FAST performance
-            Promise.all([p1, p2, p3]).then(() => {
-                fetchLiveFeed(); // Now we have all data needed to merge
-            });
-
-            callAPI('getAdvancedStats', {}, (res) => {
-                if(res.success) renderTopWinners(res.data.topWinners);
-            });
+            const p1 = new Promise(r => { if(!allData.CACHE['Users']) callAPI('getAdminTableData', {sheetName: 'Users'}, (res) => { if(res.success) allData.CACHE['Users'] = res.data; r(); }); else r(); });
+            const p2 = new Promise(r => { if(!allData.CACHE['LotteryTypes']) callAPI('getAdminTableData', {sheetName: 'LotteryTypes'}, (res) => { if(res.success) allData.CACHE['LotteryTypes'] = res.data; r(); }); else r(); });
+            const p3 = new Promise(r => { callAPI('getAdminTableData', {sheetName: 'Bets'}, (res) => { if(res.success) allData.CACHE['Bets'] = res.data; r(); }); });
+            Promise.all([p1, p2, p3]).then(() => { fetchLiveFeed(); });
+            callAPI('getAdvancedStats', {}, (res) => { if(res.success) renderTopWinners(res.data.topWinners); });
         }
 
         function fetchLiveFeed() {
             callAPI('getExtendedDashboardData', {}, (res) => {
                 if(res.success) {
                     const totalPending = res.data.pending.deposit + res.data.pending.withdraw;
-                    
                     document.getElementById('stat-pending').innerText = totalPending;
-                    
-                    const badge = document.getElementById('badge-tx');
-                    if(badge) {
-                        badge.innerText = totalPending;
-                        badge.classList.toggle('hidden', totalPending === 0);
-                    }
-
-                    const badgeHeader = document.getElementById('noti-badge-header');
-                    if(badgeHeader) {
-                        badgeHeader.innerText = totalPending;
-                        if(totalPending > 0) {
-                            badgeHeader.classList.remove('hidden');
-                            badgeHeader.classList.add('flex');
-                        } else {
-                            badgeHeader.classList.add('hidden');
-                            badgeHeader.classList.remove('flex');
-                        }
-                    }
-
-                    // *** MERGE LOGIC START ***
-                    const transactions = (res.data.feed || []).map(t => ({
-                        ...t, 
-                        _type: 'tx', 
-                        _date: new Date(t['วันที่สร้างรายการ'])
-                    }));
-
-                    const bets = (allData.CACHE['Bets'] || []).map(b => ({
-                        ...b, 
-                        _type: 'bet', 
-                        _date: new Date(b['วันที่แทง']),
-                        'จำนวนเงิน': b['จำนวนเงิน']
-                    }));
-
-                    // Combine and Sort Descending
+                    const badge = document.getElementById('badge-tx'); if(badge) { badge.innerText = totalPending; badge.classList.toggle('hidden', totalPending === 0); }
+                    const badgeHeader = document.getElementById('noti-badge-header'); if(badgeHeader) { badgeHeader.innerText = totalPending; if(totalPending > 0) { badgeHeader.classList.remove('hidden'); badgeHeader.classList.add('flex'); } else { badgeHeader.classList.add('hidden'); badgeHeader.classList.remove('flex'); } }
+                    const transactions = (res.data.feed || []).map(t => ({ ...t, _type: 'tx', _date: new Date(t['วันที่สร้างรายการ']) }));
+                    const bets = (allData.CACHE['Bets'] || []).map(b => ({ ...b, _type: 'bet', _date: new Date(b['วันที่แทง']), 'จำนวนเงิน': b['จำนวนเงิน'] }));
                     const mergedFeed = [...transactions, ...bets].sort((a, b) => b._date - a._date);
-                    // *** MERGE LOGIC END ***
-
                     renderLiveFeed(mergedFeed);
                 }
             });
         }
 
-        // --- UPDATED LIVE FEED RENDER (With Merged Data) ---
+        // --- UPDATED LIVE FEED RENDER ---
         function renderLiveFeed(feed) {
             const list = document.getElementById('live-feed-list');
-            if(!feed || feed.length === 0) { 
-                list.innerHTML = '<div class="text-center py-10 text-gray-400 text-sm font-light">Waiting for transactions...</div>'; 
-                return; 
-            }
-            
-            // Limit to 10 items
+            if(!feed || feed.length === 0) { list.innerHTML = '<div class="text-center py-10 text-gray-400 text-sm font-light">Waiting for transactions...</div>'; return; }
             const displayFeed = feed.slice(0, 10);
-            
             const users = allData.CACHE['Users'] || []; 
-            const lotteries = allData.CACHE['LotteryTypes'] || [];
-
+            const lotteries = allData.CACHE['LotteryTypes'] || []; // Get Lottery Data
             list.innerHTML = displayFeed.map(item => {
                 const isBet = item._type === 'bet';
-                let logoUrl = BANK_ICONS['default'];
-                let titleText = '';
-                let badgeText = '';
-                let badgeClass = '';
-                let amountColor = '';
-                let amountPrefix = '';
-                let iconClass = '';
-                let iconColor = '';
-                let status = item['สถานะ'] || item['สถานะโพย'] || 'pending';
-                let rawDate = isBet ? item['วันที่แทง'] : item['วันที่สร้างรายการ'];
-                let amount = item['จำนวนเงิน'] || 0;
-
+                let logoUrl = BANK_ICONS['default']; let titleText = ''; let badgeText = ''; let badgeClass = ''; let amountColor = ''; let amountPrefix = ''; let iconClass = ''; let iconColor = ''; let status = item['สถานะ'] || item['สถานะโพย'] || 'pending'; let rawDate = isBet ? item['วันที่แทง'] : item['วันที่สร้างรายการ']; let amount = item['จำนวนเงิน'] || 0;
+                
                 if (isBet) {
-                    // --- LOGIC FOR BETS ---
+                    // Logic for Bets
                     const lottoCode = item['รหัสประเภทหวย'];
                     const lottoObj = lotteries.find(l => l['รหัสประเภทหวย'] === lottoCode);
                     
-                    // Logo from LotteryTypes
                     if(lottoObj && lottoObj['ลิงก์รูปภาพ']) logoUrl = lottoObj['ลิงก์รูปภาพ'];
-                    
                     const lottoName = lottoObj ? (lottoObj['ชื่อเต็ม'] || lottoObj['ชื่อย่อ']) : lottoCode;
-                    const betType = item['ประเภทการแทง'] || '';
-                    const betNumber = item['ตัวเลข'] || '-'; 
                     
-                    // Title: "Name (Type) : Number"
-                    titleText = `${lottoName} (${betType}) : ${betNumber}`;
-
-                    badgeText = 'ชำระค่าโพย';
-                    badgeClass = 'bg-orange-100 text-orange-700 border-orange-200';
-                    amountColor = 'text-orange-600'; 
-                    amountPrefix = '-';
-                    iconClass = 'fa-file-invoice'; // Bill Icon
+                    titleText = `${lottoName} (${item['ประเภทการแทง']}) : ${item['ตัวเลข']}`;
+                    badgeText = 'ชำระค่าโพย'; 
+                    badgeClass = 'bg-orange-100 text-orange-700 border-orange-200'; 
+                    amountColor = 'text-red-600'; 
+                    amountPrefix = '-'; 
+                    iconClass = 'fa-file-invoice'; // Bill icon
                     iconColor = 'bg-orange-500';
-
                 } else {
-                    // --- LOGIC FOR TRANSACTIONS ---
-                    const type = (item['ประเภท'] || 'deposit').toLowerCase();
-                    const userId = item['รหัสผู้ใช้'];
-                    const detail = item['รายละเอียด'] || '';
-
-                    let bankName = 'Banking'; 
-                    let foundUser = users.find(u => u['รหัสผู้ใช้'] === userId);
+                    // Logic for Transactions
+                    const type = (item['ประเภท'] || 'deposit').toLowerCase(); const userId = item['รหัสผู้ใช้']; const detail = item['รายละเอียด'] || '';
+                    let bankName = 'Banking'; let foundUser = users.find(u => u['รหัสผู้ใช้'] === userId);
                     if (foundUser && foundUser['ชื่อธนาคาร']) bankName = foundUser['ชื่อธนาคาร'];
-                    
-                    // Logo from Bank
                     logoUrl = getBankLogo(bankName);
-
-                    // Title
                     titleText = (detail && detail !== 'Normal' && !detail.startsWith('Time:')) ? detail : bankName;
-
-                    if (type === 'deposit') {
-                        badgeText = 'ฝากเงิน';
-                        badgeClass = 'bg-green-100 text-green-700 border-green-200';
-                        amountColor = 'text-green-600';
-                        amountPrefix = '+';
-                        iconClass = 'fa-arrow-down';
-                        iconColor = 'bg-green-500';
-                    } else if (type === 'withdraw') {
-                        badgeText = 'ถอนเงิน';
-                        badgeClass = 'bg-red-100 text-red-700 border-red-200';
-                        amountColor = 'text-red-600';
-                        amountPrefix = '-';
-                        iconClass = 'fa-arrow-up';
-                        iconColor = 'bg-red-500';
-                    } else if (type === 'promotion') {
-                        badgeText = 'ฝากรับโปรโมชั่น';
-                        badgeClass = 'bg-orange-500 text-white border-orange-600';
-                        amountColor = 'text-green-600';
-                        amountPrefix = '+';
-                        iconClass = 'fa-gift';
-                        iconColor = 'bg-orange-500';
-                    }
+                    if (type === 'deposit') { badgeText = 'ฝากเงิน'; badgeClass = 'bg-green-100 text-green-700 border-green-200'; amountColor = 'text-green-600'; amountPrefix = '+'; iconClass = 'fa-arrow-down'; iconColor = 'bg-green-500'; } 
+                    else if (type === 'withdraw') { badgeText = 'ถอนเงิน'; badgeClass = 'bg-red-100 text-red-700 border-red-200'; amountColor = 'text-red-600'; amountPrefix = '-'; iconClass = 'fa-arrow-up'; iconColor = 'bg-red-500'; } 
+                    else if (type === 'promotion') { badgeText = 'ฝากรับโปร'; badgeClass = 'bg-orange-500 text-white border-orange-600'; amountColor = 'text-green-600'; amountPrefix = '+'; iconClass = 'fa-gift'; iconColor = 'bg-orange-500'; }
                 }
-
-                // Time Format AM/PM
-                let timeDisplay = '00:00';
-                if(rawDate) {
-                    try {
-                        const dateObj = new Date(rawDate);
-                        timeDisplay = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-                    } catch(e) {
-                        timeDisplay = rawDate.split(' ')[1]?.substring(0, 5) || rawDate;
-                    }
-                }
-
-                return `
-                <div class="flex items-center justify-between p-3 hover:bg-gray-50 transition rounded-xl border-b border-gray-50 last:border-0">
-                    <div class="flex items-center gap-4">
-                        <div class="relative shrink-0">
-                            <img src="${logoUrl}" class="w-10 h-10 rounded-xl shadow-sm object-cover border border-gray-100 p-1 bg-white" onerror="this.src='${BANK_ICONS['default']}'">
-                            <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border border-white flex items-center justify-center text-[8px] text-white ${iconColor}">
-                                <i class="fas ${iconClass}"></i>
-                            </div>
-                        </div>
-                        <div class="min-w-0">
-                            <p class="font-heading text-sm font-bold text-gray-800 truncate leading-tight mb-1">
-                                ${titleText}
-                            </p>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[10px] text-gray-400 font-light flex items-center gap-1">
-                                    <i class="far fa-clock"></i> ${timeDisplay}
-                                </span>
-                                <span class="${badgeClass} border text-[9px] px-2 py-0.5 rounded-full font-heading font-medium leading-none">
-                                    ${badgeText}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="text-right pl-2 shrink-0">
-                        <p class="font-heading font-bold ${amountColor} text-sm">${amountPrefix}${formatNumber(amount)}</p>
-                        <p class="text-[10px] text-gray-400 capitalize font-light">${status}</p>
-                    </div>
-                </div>
-                `;
+                let timeDisplay = '00:00'; if(rawDate) { try { const dateObj = new Date(rawDate); timeDisplay = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }); } catch(e) { timeDisplay = rawDate.split(' ')[1]?.substring(0, 5) || rawDate; } }
+                
+                return `<div class="flex items-center justify-between p-3 hover:bg-gray-50 transition rounded-xl border-b border-gray-50 last:border-0"><div class="flex items-center gap-4"><div class="relative shrink-0"><img src="${logoUrl}" class="w-10 h-10 rounded-xl shadow-sm object-cover border border-gray-100 p-1 bg-white" onerror="this.src='${BANK_ICONS['default']}'"><div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border border-white flex items-center justify-center text-[8px] text-white ${iconColor}"><i class="fas ${iconClass}"></i></div></div><div class="min-w-0"><p class="font-heading text-sm font-bold text-gray-800 truncate leading-tight mb-1">${titleText}</p><div class="flex items-center gap-2"><span class="text-[10px] text-gray-400 font-light flex items-center gap-1"><i class="far fa-clock"></i> ${timeDisplay}</span><span class="${badgeClass} border text-[9px] px-2 py-0.5 rounded-full font-heading font-medium leading-none">${badgeText}</span></div></div></div><div class="text-right pl-2 shrink-0"><p class="font-heading font-bold ${amountColor} text-sm">${amountPrefix}${formatNumber(amount)}</p><p class="text-[10px] text-gray-400 capitalize font-light">${status}</p></div></div>`;
             }).join('');
         }
 
@@ -735,7 +540,6 @@
             list.innerHTML = winners.map((w, i) => `<div class="flex items-center justify-between p-3 bg-gradient-to-r from-yellow-50 to-white rounded-xl border border-yellow-100"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-yellow-400 text-white flex items-center justify-center font-heading font-bold text-xs shadow-sm">${i+1}</div><div><p class="text-xs font-heading font-bold text-gray-800">${w.userId}</p></div></div><span class="text-green-600 font-heading font-bold text-sm">+${formatNumber(w.amount)}</span></div>`).join('');
         }
 
-        // --- FUNCTIONS ---
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-open'); document.getElementById('sidebar-overlay').classList.toggle('hidden'); }
 
         function showSection(id, btn) {
@@ -743,55 +547,25 @@
             document.querySelectorAll('.section-view').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             if(btn) btn.classList.add('active');
-
-            if(id === 'dashboard') {
-                document.getElementById('section-dashboard').classList.remove('hidden');
-                loadDashboardData();
-            } else if (id === 'SystemSettings') {
-                document.getElementById('section-SystemSettings').classList.remove('hidden');
-                loadWebConfig();
-            } else {
-                document.getElementById('section-generic-table').classList.remove('hidden');
-                document.getElementById('table-title').innerText = translateTitle(id);
-                loadGenericTable(id);
-            }
+            if(id === 'dashboard') { document.getElementById('section-dashboard').classList.remove('hidden'); loadDashboardData(); } 
+            else if (id === 'SystemSettings') { document.getElementById('section-SystemSettings').classList.remove('hidden'); loadWebConfig(); } 
+            else { document.getElementById('section-generic-table').classList.remove('hidden'); document.getElementById('table-title').innerText = translateTitle(id); loadGenericTable(id); }
             if (window.innerWidth < 1024) toggleSidebar();
         }
 
-        function translateTitle(id) {
-            const map = {'Transactions':'รายการฝาก-ถอน', 'Users':'สมาชิกทั้งหมด', 'Bets':'โพยหวย', 'Banks':'ธนาคารเว็บ', 'LotteryTypes':'ประเภทหวย', 'LotteryResults':'ผลรางวัล', 'BlockedNumbers':'เลขอั้น', 'DepositRules':'โปรโมชั่น', 'Sliders':'สไลด์แบนเนอร์', 'Articles':'บทความ/ข่าวสาร', 'Trending':'รายการมาแรง', 'PayoutRates': 'อัตราจ่าย', 'UIText': 'ข้อความระบบ'};
-            return map[id] || id;
-        }
+        function translateTitle(id) { const map = {'Transactions':'รายการฝาก-ถอน', 'Users':'สมาชิกทั้งหมด', 'Bets':'โพยหวย', 'Banks':'ธนาคารเว็บ', 'LotteryTypes':'ประเภทหวย', 'LotteryResults':'ผลรางวัล', 'BlockedNumbers':'เลขอั้น', 'DepositRules':'โปรโมชั่น', 'Sliders':'สไลด์แบนเนอร์', 'Articles':'บทความ/ข่าวสาร', 'Trending':'รายการมาแรง', 'PayoutRates': 'อัตราจ่าย', 'UIText': 'ข้อความระบบ'}; return map[id] || id; }
 
         function loadGenericTable(sheetKey) {
             const isCardView = ['DepositRules', 'Articles', 'Sliders', 'Trending', 'LotteryTypes'].includes(sheetKey);
             const isListView = ['Transactions'].includes(sheetKey); 
-            
             document.getElementById('table-container').classList.toggle('hidden', isCardView || isListView);
             document.getElementById('list-container').classList.toggle('hidden', !isListView);
             document.getElementById('card-view-container').classList.toggle('hidden', !isCardView);
-            
-            // *** CRITICAL UPDATE: Ensure Grid Layout for Card View ***
             const cardContainer = document.getElementById('card-view-container');
-            if(isCardView) {
-                cardContainer.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6';
-            } else {
-                cardContainer.className = 'hidden';
-            }
-            
+            if(isCardView) { cardContainer.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'; } else { cardContainer.className = 'hidden'; }
             document.getElementById('table-body').innerHTML = '<tr><td colspan="100%" class="p-10 text-center text-gray-400 font-light">Loading Table...</td></tr>';
             document.getElementById('list-container').innerHTML = '<div class="text-center py-10 text-gray-400 font-light">Loading List...</div>';
-
-            if (sheetKey === 'Transactions' && !allData.CACHE['Users']) {
-                 callAPI('getAdminTableData', {sheetName: 'Users'}, (res) => {
-                    if(res.success) {
-                        allData.CACHE['Users'] = res.data;
-                        loadGenericTable(sheetKey); 
-                    }
-                });
-                return;
-            }
-
+            if (sheetKey === 'Transactions' && !allData.CACHE['Users']) { callAPI('getAdminTableData', {sheetName: 'Users'}, (res) => { if(res.success) { allData.CACHE['Users'] = res.data; loadGenericTable(sheetKey); } }); return; }
             if(allData.CACHE[sheetKey]) { processDataRender(sheetKey, allData.CACHE[sheetKey]); callAPI('getAdminTableData', {sheetName: sheetKey}, (res) => { if(res.success) { allData.CACHE[sheetKey] = res.data.reverse(); processDataRender(sheetKey, res.data); } }); } else { callAPI('getAdminTableData', {sheetName: sheetKey}, (res) => { if(res.success) { allData.CACHE[sheetKey] = res.data.reverse(); processDataRender(sheetKey, res.data); } }); }
             document.getElementById('btn-add-new').onclick = () => openModal(sheetKey);
         }
@@ -800,24 +574,15 @@
             const isCardView = ['DepositRules', 'Articles', 'Sliders', 'Trending', 'LotteryTypes'].includes(sheetKey);
             const isListView = ['Transactions'].includes(sheetKey);
             document.getElementById('rows-count').innerText = data.length;
-            if (isCardView) renderCardView(sheetKey, data);
-            else if (isListView) renderListView(sheetKey, data);
-            else renderTableView(sheetKey, data);
+            if (isCardView) renderCardView(sheetKey, data); else if (isListView) renderListView(sheetKey, data); else renderTableView(sheetKey, data);
         }
 
         function renderCardView(sheetKey, data) {
             const container = document.getElementById('card-view-container');
             if(!data || data.length === 0) { container.innerHTML = '<div class="col-span-full text-center text-gray-400 font-light">ไม่พบข้อมูล</div>'; return; }
-            const schema = SCHEMAS[sheetKey];
-            const idKey = schema[0].k;
-            const imgKey = schema.find(s => s.t === 'image')?.k;
-            const titleKey = schema[1].k;
-            const statusKey = schema.find(s => s.t === 'toggle')?.k;
+            const schema = SCHEMAS[sheetKey]; const idKey = schema[0].k; const imgKey = schema.find(s => s.t === 'image')?.k; const titleKey = schema[1].k; const statusKey = schema.find(s => s.t === 'toggle')?.k;
             container.innerHTML = data.map(row => {
-                const id = row[idKey];
-                const imgUrl = imgKey && row[imgKey] ? row[imgKey] : 'https://placehold.co/400x225?text=No+Image';
-                const title = row[titleKey] || 'No Title';
-                const isActive = statusKey ? (row[statusKey] === 'active' || row[statusKey] === true || row[statusKey] === 'TRUE') : true;
+                const id = row[idKey]; const imgUrl = imgKey && row[imgKey] ? row[imgKey] : 'https://placehold.co/400x225?text=No+Image'; const title = row[titleKey] || 'No Title'; const isActive = statusKey ? (row[statusKey] === 'active' || row[statusKey] === true || row[statusKey] === 'TRUE') : true;
                 return `<div class="card-item group"><div class="card-img-wrapper"><img src="${imgUrl}" class="card-img group-hover:scale-105 transition-transform duration-500" loading="lazy"><div class="absolute top-2 right-2"><span class="px-2 py-1 rounded-md text-[10px] font-bold shadow-sm ${isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${isActive ? 'เปิดใช้งาน' : 'ปิด'}</span></div></div><div class="card-body"><h3 class="card-title">${title}</h3><div class="text-xs text-gray-400 mb-2 font-light">ID: ${id}</div><div class="card-footer"><button onclick="deleteItem('${sheetKey}', '${id}')" class="text-gray-400 hover:text-red-500 transition text-sm font-heading"><i class="fas fa-trash"></i> ลบ</button><button onclick="openModal('${sheetKey}', '${id}')" class="bg-brand-dark text-white px-4 py-1.5 rounded-lg text-sm font-heading font-medium hover:bg-green-800 transition shadow-sm">แก้ไข</button></div></div></div>`;
             }).join('');
         }
@@ -825,59 +590,29 @@
         function renderListView(sheetKey, data) {
             const container = document.getElementById('list-container');
             if(!data || data.length === 0) { container.innerHTML = '<div class="text-center py-10 text-gray-400 font-light">ไม่พบข้อมูล</div>'; return; }
-            
-            const rowsHtml = data.map(row => {
-                const schema = SCHEMAS[sheetKey];
-                const idKey = schema[0].k;
-                const id = row[idKey];
+            container.innerHTML = '<div class="flex flex-col">' + data.map(row => {
+                const schema = SCHEMAS[sheetKey]; const idKey = schema[0].k; const id = row[idKey];
                 const actions = `<button onclick="openModal('${sheetKey}', '${id}')" class="w-8 h-8 rounded-lg bg-green-500 hover:bg-green-600 text-white shadow-sm flex items-center justify-center transition-transform hover:scale-105 ml-2"><i class="fas fa-edit"></i></button><button onclick="deleteItem('${sheetKey}', '${id}')" class="w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-sm flex items-center justify-center transition-transform hover:scale-105 ml-2"><i class="fas fa-trash-alt"></i></button>`;
-                
                 if (sheetKey === 'Transactions') {
-                    const isDep = row['ประเภท'] === 'deposit';
-                    const userId = row['รหัสผู้ใช้'];
-                    const user = allData.CACHE['Users'] ? allData.CACHE['Users'].find(u => u['รหัสผู้ใช้'] === userId) : null;
-                    let bankName = 'ไม่ระบุ';
-                    let accNum = '';
-                    if (user) {
-                        bankName = user['ชื่อธนาคาร'] || 'ไม่ระบุ';
-                        accNum = user['เลขที่บัญชี'] || '';
-                    } else {
-                        const rawBank = (row['ข้อมูลธนาคาร']||'').split('|')[0].trim();
-                        if (!rawBank.startsWith('Time:')) bankName = rawBank;
-                    }
-                    const logo = getBankLogo(bankName);
-                    const slipUrl = row['ลิงก์สลิป']; 
+                    const isDep = row['ประเภท'] === 'deposit'; const userId = row['รหัสผู้ใช้']; const user = allData.CACHE['Users'] ? allData.CACHE['Users'].find(u => u['รหัสผู้ใช้'] === userId) : null;
+                    let bankName = 'ไม่ระบุ'; let accNum = ''; if (user) { bankName = user['ชื่อธนาคาร'] || 'ไม่ระบุ'; accNum = user['เลขที่บัญชี'] || ''; } else { const rawBank = (row['ข้อมูลธนาคาร']||'').split('|')[0].trim(); if (!rawBank.startsWith('Time:')) bankName = rawBank; }
+                    const logo = getBankLogo(bankName); const slipUrl = row['ลิงก์สลิป']; 
                     let slipDisplay = slipUrl ? `<img src="${slipUrl}" class="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm cursor-zoom-in hover:scale-110 transition-transform" onclick="event.stopPropagation(); openLightbox('${slipUrl}')" title="ดูสลิป">` : `<div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs"><i class="fas fa-receipt"></i></div>`;
-                    
-                    const statusClass = row['สถานะ'] === 'completed' ? 'bg-green-100 text-green-700' : (row['สถานะ'] === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700');
-                    const amountColor = isDep ? 'text-green-600' : 'text-red-600';
-
+                    const statusClass = row['สถานะ'] === 'completed' ? 'bg-green-100 text-green-700' : (row['สถานะ'] === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'); const amountColor = isDep ? 'text-green-600' : 'text-red-600';
                     return `<div class="list-row group"><div class="flex items-center gap-4 min-w-[220px] list-col"><div class="w-10 h-10 rounded-xl ${isDep?'bg-green-100 text-green-600':'bg-red-100 text-red-600'} flex items-center justify-center text-lg shrink-0 shadow-sm"><i class="fas ${isDep?'fa-arrow-down':'fa-arrow-up'}"></i></div><div><div class="text-[10px] text-gray-400 font-light uppercase mb-0.5">${id}</div><div class="font-heading font-bold text-gray-800 text-xs">${isDep ? 'ฝากเงิน' : 'ถอนเงิน'} โดย ${userId}</div></div></div><div class="min-w-[180px] flex items-center gap-2 list-col"><img src="${logo}" class="w-8 h-8 rounded-full shadow-sm object-cover bg-white" onerror="this.src='${BANK_ICONS['default']}'"><div><div class="text-xs font-heading font-bold text-gray-700">${bankName}</div><div class="text-[10px] text-gray-500 font-light">${accNum}</div></div></div><div class="text-base font-heading font-bold ${amountColor} min-w-[120px] text-right list-col">${isDep?'+':'-'}฿${formatNumber(row['จำนวนเงิน'])}</div><div class="min-w-[100px] text-center list-col flex justify-center items-center gap-2"><span class="px-3 py-1 rounded-full text-xs font-medium font-heading ${statusClass}">${row['สถานะ']}</span>${slipDisplay}</div><div class="flex items-center justify-end min-w-[100px] list-col">${actions}</div></div>`;
-                }
-                return '';
-            }).join('');
-            container.innerHTML = '<div class="flex flex-col">' + rowsHtml + '</div>';
+                } return '';
+            }).join('') + '</div>';
         }
 
         function renderTableView(sheetKey, data) {
-            const thead = document.getElementById('table-header');
-            const tbody = document.getElementById('table-body');
-            let schema = SCHEMAS[sheetKey];
-            const idKey = schema[0].k;
+            const thead = document.getElementById('table-header'); const tbody = document.getElementById('table-body'); let schema = SCHEMAS[sheetKey]; const idKey = schema[0].k;
             thead.innerHTML = `<tr class="bg-gray-50 border-b border-gray-200 text-left whitespace-nowrap text-gray-500 text-xs uppercase tracking-wider">${schema.map(s => `<th class="px-6 py-4 font-heading font-semibold">${s.l}</th>`).join('')}<th class="px-6 py-4 text-right font-heading font-semibold">จัดการ</th></tr>`;
             tbody.innerHTML = data.map(row => {
-                const id = row[idKey];
-                let html = `<tr class="hover:bg-gray-50 border-b border-gray-100 transition-colors text-sm text-gray-700 group">`;
+                const id = row[idKey]; let html = `<tr class="hover:bg-gray-50 border-b border-gray-100 transition-colors text-sm text-gray-700 group">`;
                 schema.forEach(col => {
-                    let val = row[col.k];
-                    let display = val;
+                    let val = row[col.k]; let display = val;
                     if(col.t === 'toggle') { const isActive = (val === 'active' || val === true || val === 'TRUE'); display = isActive ? `<span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 font-heading"><i class="fas fa-check-circle mr-1"></i> ACTIVE</span>` : `<span class="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 font-heading"><i class="fas fa-times-circle mr-1"></i> BANNED</span>`; }
-                    else if(col.t === 'status' || col.t === 'status_bet') { 
-                        let sClass = 'bg-orange-100 text-orange-700';
-                        if(['completed','approved','win'].includes(val)) sClass = 'bg-green-100 text-green-700';
-                        else if(['rejected','banned','lose'].includes(val)) sClass = 'bg-red-100 text-red-700';
-                        display = `<span class="px-3 py-1 rounded-full text-xs font-medium font-heading ${sClass}">${val}</span>`; 
-                    }
+                    else if(col.t === 'status' || col.t === 'status_bet') { let sClass = 'bg-orange-100 text-orange-700'; if(['completed','approved','win'].includes(val)) sClass = 'bg-green-100 text-green-700'; else if(['rejected','banned','lose'].includes(val)) sClass = 'bg-red-100 text-red-700'; display = `<span class="px-3 py-1 rounded-full text-xs font-medium font-heading ${sClass}">${val}</span>`; }
                     else if(col.t === 'number') { const numVal = Number(val) || 0; const colorClass = (col.k === 'ยอดเงินคงเหลือ' && numVal > 0) ? 'text-green-600 font-bold' : (col.k === 'ยอดเงินคงเหลือ' ? 'text-gray-400' : ''); display = `<span class="font-heading font-medium ${colorClass}">${formatNumber(val)}</span>`; }
                     else if(col.t === 'bank_user' || col.t === 'bank_tx') { display = renderBankWithLogo(val, ''); }
                     else { display = renderCellContent(val, col.t); }
@@ -888,14 +623,8 @@
             }).join('');
         }
 
-        // === SCHEMAS (โครงสร้างข้อมูล - ไม่แตะต้อง) ===
         const SCHEMAS = {
-            'Transactions': [
-                {k:'รหัสธุรกรรม', l:'รหัสรายการ', r:true}, {k:'รหัสผู้ใช้', l:'รหัสสมาชิก'}, {k:'ประเภท', l:'ประเภท', t:'select', o:['deposit','withdraw']}, 
-                {k:'จำนวนเงิน', l:'จำนวนเงิน', t:'number', highlight:true}, {k:'สถานะ', l:'สถานะ', t:'status'}, {k:'ข้อมูลธนาคาร', l:'เวลา/ธนาคาร', t:'bank_tx'}, 
-                {k:'รายละเอียด', l:'หมายเหตุ'}, {k:'ลิงก์สลิป', l:'สลิปโอนเงิน', t:'image', cover:true}, {k:'วันที่สร้างรายการ', l:'เวลาแจ้ง', r:true},
-                {k:'วันที่ดำเนินการ', l:'เวลาอนุมัติ', r:true}, {k:'ดำเนินการโดย', l:'แอดมิน', r:true}
-            ],
+            'Transactions': [{k:'รหัสธุรกรรม', l:'รหัสรายการ', r:true}, {k:'รหัสผู้ใช้', l:'รหัสสมาชิก'}, {k:'ประเภท', l:'ประเภท', t:'select', o:['deposit','withdraw']}, {k:'จำนวนเงิน', l:'จำนวนเงิน', t:'number', highlight:true}, {k:'สถานะ', l:'สถานะ', t:'status'}, {k:'ข้อมูลธนาคาร', l:'เวลา/ธนาคาร', t:'bank_tx'}, {k:'รายละเอียด', l:'หมายเหตุ'}, {k:'ลิงก์สลิป', l:'สลิปโอนเงิน', t:'image', cover:true}, {k:'วันที่สร้างรายการ', l:'เวลาแจ้ง', r:true}, {k:'วันที่ดำเนินการ', l:'เวลาอนุมัติ', r:true}, {k:'ดำเนินการโดย', l:'แอดมิน', r:true}],
             'Users': [{k:'รหัสผู้ใช้', l:'รหัสสมาชิก', r:true}, {k:'ชื่อผู้ใช้', l:'เบอร์โทร'}, {k:'เบอร์โทรศัพท์', l:'เบอร์โทรศัพท์'}, {k:'รหัสPIN', l:'PIN', t:'number'}, {k:'ชื่อ-สกุล', l:'ชื่อ-นามสกุล'}, {k:'ยอดเงินคงเหลือ', l:'เครดิต', t:'number'}, {k:'รายได้แนะนำ', l:'ค่าคอมมิชชั่น', t:'number'}, {k:'ชื่อธนาคาร', l:'ธนาคาร', t:'bank_user', o:['KBANK','SCB','KTB','BBL','GSB','BAY','TTB','TMB','BAAC']}, {k:'เลขที่บัญชี', l:'เลขบัญชี'}, {k:'ชื่อบัญชี', l:'ชื่อบัญชี'}, {k:'รหัสผู้แนะนำ', l:'ผู้แนะนำ'}, {k:'สถานะ', l:'สถานะ', t:'toggle'}, {k:'วันที่สมัคร', l:'วันที่สมัคร', r:true}, {k:'อัปเดตล่าสุด', l:'อัปเดตล่าสุด', r:true}],
             'Bets': [{k:'รหัสโพย', l:'รหัสโพย', r:true}, {k:'รหัสผู้ใช้', l:'สมาชิก'}, {k:'รหัสประเภทหวย', l:'ประเภทหวย'}, {k:'งวดวันที่', l:'งวดวันที่'}, {k:'ประเภทการแทง', l:'รูปแบบ'}, {k:'ตัวเลข', l:'เลขที่แทง', highlight:true}, {k:'จำนวนเงิน', l:'ยอดแทง', t:'number'}, {k:'อัตราจ่าย', l:'อัตราจ่าย', t:'number'}, {k:'ยอดชนะ', l:'ยอดที่ถูกรางวัล', t:'number'}, {k:'สถานะโพย', l:'สถานะ', t:'status_bet'}, {k:'วันที่แทง', l:'เวลาแทง', r:true}, {k:'วันที่คิดผล', l:'เวลาตัดรอบ', r:true}],
             'LotteryTypes': [{k:'รหัสประเภทหวย', l:'รหัสหวย', r:true}, {k:'ชื่อย่อ', l:'ชื่อย่อ', highlight:true}, {k:'ชื่อเต็ม', l:'ชื่อหวยเต็ม'}, {k:'เวลาปิดรับ', l:'เวลาปิด'}, {k:'รอบ/วันที่ออก', l:'รอบออกผล'}, {k:'เปิดใช้งาน', l:'เปิดรับแทง', t:'toggle'}, {k:'ยอดนิยม', l:'Hot', t:'toggle'}, {k:'ลิงก์วิดีโอ', l:'ลิงก์ถ่ายทอดสด'}, {k:'อัตราจ่าย_สองตัวบน', l:'จ่าย 2ตัวบน', t:'number'}, {k:'อัตราจ่าย_สองตัวล่าง', l:'จ่าย 2ตัวล่าง', t:'number'}, {k:'อัตราจ่าย_สามตัวบน', l:'จ่าย 3ตัวบน', t:'number'}, {k:'อัตราจ่าย_สามตัวล่าง', l:'จ่าย 3ตัวล่าง', t:'number'}, {k:'อัตราจ่าย_สามตัวหน้า', l:'จ่าย 3ตัวหน้า', t:'number'}, {k:'อัตราจ่าย_สามตัวท้าย', l:'จ่าย 3ตัวท้าย', t:'number'}, {k:'อัตราจ่าย_สามตัวโต๊ด', l:'จ่าย 3ตัวโต๊ด', t:'number'}, {k:'อัตราจ่าย_สี่ตัวตรง', l:'จ่าย 4ตัวตรง', t:'number'}, {k:'อัตราจ่าย_สี่ตัวโต๊ด', l:'จ่าย 4ตัวโต๊ด', t:'number'}, {k:'ลิงก์รูปภาพ', l:'รูปปก', t:'image', cover:true}, {k:'วันที่สร้าง', l:'วันที่สร้าง', r:true}, {k:'อัปเดตล่าสุด', l:'แก้ไขล่าสุด', r:true}],
@@ -913,32 +642,17 @@
         };
 
         function openModal(sheetKey, id = null) {
-            const schema = SCHEMAS[sheetKey] || [];
-            const idKey = schema[0].k;
-            let data = {};
+            const schema = SCHEMAS[sheetKey] || []; const idKey = schema[0].k; let data = {};
             if(id && allData.CACHE[sheetKey]) data = allData.CACHE[sheetKey].find(r => r[idKey] == id) || {};
             document.getElementById('modal-title').innerText = id ? `แก้ไขข้อมูล (${translateTitle(sheetKey)})` : `เพิ่มข้อมูลใหม่ (${translateTitle(sheetKey)})`;
             document.getElementById('modal-id-display').innerText = id ? `ID: ${id}` : 'AUTO GEN ID';
             document.getElementById('dynamic-id').value = id || '';
-            
-            const txDiv = document.getElementById('transaction-actions'); 
-            const btnSave = document.getElementById('btn-save-form');
-            if(sheetKey === 'Transactions' && data['สถานะ'] === 'pending') { 
-                txDiv.classList.remove('hidden'); 
-                btnSave.classList.add('hidden'); 
-            } else { 
-                txDiv.classList.add('hidden'); 
-                btnSave.classList.remove('hidden'); 
-            }
-
+            const txDiv = document.getElementById('transaction-actions'); const btnSave = document.getElementById('btn-save-form');
+            if(sheetKey === 'Transactions' && data['สถานะ'] === 'pending') { txDiv.classList.remove('hidden'); btnSave.classList.add('hidden'); } else { txDiv.classList.add('hidden'); btnSave.classList.remove('hidden'); }
             document.getElementById('dynamic-fields').innerHTML = schema.map(col => {
-                if(col.r) return ''; const val = data[col.k] || ''; const isImage = col.t === 'image'; const colSpan = isImage ? 'col-span-1 md:col-span-2' : 'col-span-1';
-                let inputHtml = '';
+                if(col.r) return ''; const val = data[col.k] || ''; const isImage = col.t === 'image'; const colSpan = isImage ? 'col-span-1 md:col-span-2' : 'col-span-1'; let inputHtml = '';
                 if(col.t === 'toggle') { const isOn = (val === 'active' || val === true || val === 'TRUE'); inputHtml = `<input type="hidden" name="${col.k}" id="input-${col.k}" value="${isOn?(sheetKey==='Users'?'active':'TRUE'):(sheetKey==='Users'?'banned':'FALSE')}"><div class="flex gap-2"><button type="button" class="btn-option flex-1 py-2 rounded-lg ${isOn?'selected':''}" onclick="setToggle('${col.k}',true,this)">เปิด</button><button type="button" class="btn-option flex-1 py-2 rounded-lg ${!isOn?'selected':''}" onclick="setToggle('${col.k}',false,this)">ปิด</button></div>`; }
-                else if(col.t === 'select' || col.t === 'bank_user') { 
-                    const options = col.o || [];
-                    inputHtml = `<input type="hidden" name="${col.k}" id="input-${col.k}" value="${val}"><div class="flex flex-wrap gap-2">${options.map(opt => `<button type="button" class="btn-option px-3 py-1.5 rounded-lg text-xs ${val===opt?'selected':''}" onclick="setSelect('${col.k}','${opt}',this)">${opt}</button>`).join('')}</div>`; 
-                }
+                else if(col.t === 'select' || col.t === 'bank_user') { const options = col.o || []; inputHtml = `<input type="hidden" name="${col.k}" id="input-${col.k}" value="${val}"><div class="flex flex-wrap gap-2">${options.map(opt => `<button type="button" class="btn-option px-3 py-1.5 rounded-lg text-xs ${val===opt?'selected':''}" onclick="setSelect('${col.k}','${opt}',this)">${opt}</button>`).join('')}</div>`; }
                 else if(col.t === 'textarea') { inputHtml = `<textarea name="${col.k}" rows="3" class="w-full px-3 py-2 border rounded-lg outline-none font-light">${val}</textarea>`; }
                 else { const handler = isImage ? `oninput="document.getElementById('prev-${col.k}').src=this.value"` : ''; inputHtml = `<input type="text" name="${col.k}" value="${val}" class="w-full px-3 py-2 border rounded-lg outline-none font-light" placeholder="${col.l}" ${handler}>`; }
                 return `<div class="${colSpan}"><label class="block text-xs font-heading font-bold text-gray-500 mb-1.5">${col.l}</label>${inputHtml}${isImage ? `<div class="mt-2 h-32 bg-gray-100 rounded border flex items-center justify-center overflow-hidden"><img id="prev-${col.k}" src="${val}" class="max-h-full"></div>` : ''}</div>`;
@@ -951,119 +665,26 @@
         function filterGenericTable() { const t=document.getElementById('global-search').value.toLowerCase(); document.querySelectorAll(document.getElementById('card-view-container').className !== 'hidden' ? '.card-item' : (document.getElementById('list-container').className !== 'hidden' ? '.list-row' : '.data-table tbody tr')).forEach(el => el.style.display = el.innerText.toLowerCase().includes(t) ? '' : 'none'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         
-        // --- REAL-TIME ACTIONS (Optimistic UI - UPDATED) ---
         function submitForm() { 
-            const form = document.getElementById('dynamic-form'); 
-            const data = Object.fromEntries(new FormData(form).entries()); 
-            const idKey = SCHEMAS[currentSheet][0].k; 
-            const targetId = document.getElementById('dynamic-id').value;
-            data[idKey] = targetId; 
-
-            // Update UI Immediately
-            if(allData.CACHE[currentSheet]) {
-                if (targetId) { // Edit
-                    const idx = allData.CACHE[currentSheet].findIndex(r => r[idKey] == targetId);
-                    if(idx !== -1) allData.CACHE[currentSheet][idx] = { ...allData.CACHE[currentSheet][idx], ...data };
-                } else { // Add (Mock)
-                    data[idKey] = 'WAITING...';
-                    allData.CACHE[currentSheet].unshift(data);
-                }
-                processDataRender(currentSheet, allData.CACHE[currentSheet]);
-            }
-            
-            Swal.fire({title: 'Saving...', didOpen: () => Swal.showLoading()}); 
-            callAPI('saveAdminRecord', {sheetName: currentSheet, data: JSON.stringify(data)}, (res) => { 
-                if(res.success) { 
-                    Swal.fire('Saved!', '', 'success'); 
-                    closeModal('dynamic-modal'); 
-                    loadGenericTable(currentSheet); 
-                    if(currentSheet === 'Transactions') loadDashboardData();
-                } else Swal.fire('Error', res.error, 'error'); 
-            }); 
+            const form = document.getElementById('dynamic-form'); const data = Object.fromEntries(new FormData(form).entries()); const idKey = SCHEMAS[currentSheet][0].k; const targetId = document.getElementById('dynamic-id').value; data[idKey] = targetId; 
+            if(allData.CACHE[currentSheet]) { if (targetId) { const idx = allData.CACHE[currentSheet].findIndex(r => r[idKey] == targetId); if(idx !== -1) allData.CACHE[currentSheet][idx] = { ...allData.CACHE[currentSheet][idx], ...data }; } else { data[idKey] = 'WAITING...'; allData.CACHE[currentSheet].unshift(data); } processDataRender(currentSheet, allData.CACHE[currentSheet]); }
+            Swal.fire({title: 'Saving...', didOpen: () => Swal.showLoading()}); callAPI('saveAdminRecord', {sheetName: currentSheet, data: JSON.stringify(data)}, (res) => { if(res.success) { Swal.fire('Saved!', '', 'success'); closeModal('dynamic-modal'); loadGenericTable(currentSheet); if(currentSheet === 'Transactions') loadDashboardData(); } else Swal.fire('Error', res.error, 'error'); }); 
         }
         
         function handleTransactionAction(s) { 
             const targetId = document.getElementById('dynamic-id').value;
-            
-            Swal.fire({
-                title: s === 'completed' ? 'อนุมัติยอดใช่ไหม?' : 'ปฏิเสธรายการใช่ไหม?', 
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'ยืนยัน',
-                cancelButtonText: 'ยกเลิก',
-                confirmButtonColor: s === 'completed' ? '#166534' : '#991b1b'
-            }).then((r) => { 
+            Swal.fire({title: s === 'completed' ? 'อนุมัติยอดใช่ไหม?' : 'ปฏิเสธรายการใช่ไหม?', icon: 'question', showCancelButton: true, confirmButtonText: 'ยืนยัน', cancelButtonText: 'ยกเลิก', confirmButtonColor: s === 'completed' ? '#166534' : '#991b1b'}).then((r) => { 
                 if(r.isConfirmed) {
                     Swal.fire({title: 'Processing...', didOpen: () => Swal.showLoading()});
-                    
-                    // --- OPTIMISTIC UI UPDATE START ---
                     if(allData.CACHE['Transactions']) {
                         const row = allData.CACHE['Transactions'].find(r => r['รหัสธุรกรรม'] == targetId);
                         if(row) {
-                            row['สถานะ'] = s; 
-                            if(s === 'completed') {
-                                row['ดำเนินการโดย'] = 'Admin';
-                                row['วันที่ดำเนินการ'] = new Date().toLocaleString('en-GB');
-                                
-                                // UPDATE BALANCES INSTANTLY
-                                const amount = Number(row['จำนวนเงิน']) || 0;
-                                const isDep = row['ประเภท'] === 'deposit';
-                                const statEl = document.getElementById(isDep ? 'stat-dep' : 'stat-wit');
-                                const balanceEl = document.getElementById('stat-balance');
-
-                                if(statEl) {
-                                    const currentVal = parseFloat(statEl.innerText.replace(/,/g, '')) || 0;
-                                    statEl.innerText = formatNumber(currentVal + amount);
-                                }
-                                
-                                if(balanceEl) {
-                                    let currentBal = parseFloat(balanceEl.innerText.replace(/[^\d.-]/g, '')) || 0;
-                                    if(isDep) currentBal += amount;
-                                    else currentBal -= amount;
-                                    balanceEl.innerText = '฿' + formatNumber(currentBal);
-                                }
-                            }
-                            
-                            // REDUCE NOTIFICATION BADGE INSTANTLY
-                            const pendingEl = document.getElementById('stat-pending');
-                            if(pendingEl) {
-                                const currentPending = parseInt(pendingEl.innerText) || 0;
-                                const newPending = Math.max(0, currentPending - 1);
-                                pendingEl.innerText = newPending;
-                                
-                                const badgeTx = document.getElementById('badge-tx');
-                                if(badgeTx) { badgeTx.innerText = newPending; badgeTx.classList.toggle('hidden', newPending === 0); }
-                                
-                                const badgeHeader = document.getElementById('noti-badge-header');
-                                if(badgeHeader) { 
-                                    badgeHeader.innerText = newPending; 
-                                    if(newPending > 0) {
-                                        badgeHeader.classList.remove('hidden'); 
-                                        badgeHeader.classList.add('flex');
-                                    } else {
-                                        badgeHeader.classList.add('hidden'); 
-                                        badgeHeader.classList.remove('flex');
-                                    }
-                                }
-                            }
+                            row['สถานะ'] = s; if(s === 'completed') { row['ดำเนินการโดย'] = 'Admin'; row['วันที่ดำเนินการ'] = new Date().toLocaleString('en-GB'); const amount = Number(row['จำนวนเงิน']) || 0; const isDep = row['ประเภท'] === 'deposit'; const statEl = document.getElementById(isDep ? 'stat-dep' : 'stat-wit'); const balanceEl = document.getElementById('stat-balance'); if(statEl) { const currentVal = parseFloat(statEl.innerText.replace(/,/g, '')) || 0; statEl.innerText = formatNumber(currentVal + amount); } if(balanceEl) { let currentBal = parseFloat(balanceEl.innerText.replace(/[^\d.-]/g, '')) || 0; if(isDep) currentBal += amount; else currentBal -= amount; balanceEl.innerText = '฿' + formatNumber(currentBal); } }
+                            const pendingEl = document.getElementById('stat-pending'); if(pendingEl) { const currentPending = parseInt(pendingEl.innerText) || 0; const newPending = Math.max(0, currentPending - 1); pendingEl.innerText = newPending; const badgeTx = document.getElementById('badge-tx'); if(badgeTx) { badgeTx.innerText = newPending; badgeTx.classList.toggle('hidden', newPending === 0); } const badgeHeader = document.getElementById('noti-badge-header'); if(badgeHeader) { badgeHeader.innerText = newPending; if(newPending > 0) { badgeHeader.classList.remove('hidden'); badgeHeader.classList.add('flex'); } else { badgeHeader.classList.add('hidden'); badgeHeader.classList.remove('flex'); } } }
                             processDataRender('Transactions', allData.CACHE['Transactions']);
                         }
                     }
-                    // --- OPTIMISTIC UI UPDATE END ---
-
-                    callAPI('processTransaction', {
-                        id: targetId, 
-                        status: s, 
-                        adminName: 'Admin'
-                    }, (res) => { 
-                        if(res.success) { 
-                            closeModal('dynamic-modal'); 
-                            Swal.fire('สำเร็จ','ดำเนินการเรียบร้อยแล้ว','success'); 
-                            setTimeout(() => { loadGenericTable('Transactions'); loadDashboardData(); }, 1500); 
-                        } else {
-                            Swal.fire('Error', res.error, 'error');
-                        }
-                    }); 
+                    callAPI('processTransaction', {id: targetId, status: s, adminName: 'Admin'}, (res) => { if(res.success) { closeModal('dynamic-modal'); Swal.fire('สำเร็จ','ดำเนินการเรียบร้อยแล้ว','success'); setTimeout(() => { loadGenericTable('Transactions'); loadDashboardData(); }, 1500); } else { Swal.fire('Error', res.error, 'error'); } }); 
                 }
             }); 
         }
@@ -1071,15 +692,8 @@
         function deleteItem(s, id) { 
             Swal.fire({title:'Delete?', showCancelButton:true, confirmButtonColor:'#ef4444'}).then((r)=>{ 
                 if(r.isConfirmed) {
-                    if(allData.CACHE[s]) {
-                        allData.CACHE[s] = allData.CACHE[s].filter(item => item[SCHEMAS[s][0].k] != id);
-                        processDataRender(s, allData.CACHE[s]);
-                    }
-                    callAPI('deleteAdminRecord',{sheetName:s,id:id},()=>{ 
-                        Swal.fire('Deleted','','success'); 
-                        loadGenericTable(s); 
-                        loadDashboardData(); 
-                    }); 
+                    if(allData.CACHE[s]) { allData.CACHE[s] = allData.CACHE[s].filter(item => item[SCHEMAS[s][0].k] != id); processDataRender(s, allData.CACHE[s]); }
+                    callAPI('deleteAdminRecord',{sheetName:s,id:id},()=>{ Swal.fire('Deleted','','success'); loadGenericTable(s); loadDashboardData(); }); 
                 }
             }); 
         }
